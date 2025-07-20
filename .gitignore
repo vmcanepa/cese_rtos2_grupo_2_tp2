@@ -1,16 +1,9 @@
-# Ignorar carpetas Debug en cualquier parte
-#Debug/
-#*/Debug/
-
-# Ignorar cualquier .settings en cualquier carpeta
-#**/.settings/
-
-# Ignorar cualquier archivo que tenga Debug. en el nombre y cualquier extensión
-#*Debug.*
-
-
 /.metadata/
 */Debug/*
 */*.launch
 */*.cfg
 
+**/.settings
+**/.cproject
+**/.mxproject
+**/.project
