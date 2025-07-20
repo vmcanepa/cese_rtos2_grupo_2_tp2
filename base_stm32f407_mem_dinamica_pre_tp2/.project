@@ -33,12 +33,12 @@
 		<link>
 			<name>app/inc</name>
 			<type>2</type>
-			<location>/home/vcanepa/Documents/STM32CubeIDE/workspace_1.18.1/base_stm32f446re_mem_dinamica_pre_tp2/app/inc</location>
+			<location>/home/vcanepa/Documents/STM32CubeIDE/workspace_1.18.1_GRUPO2_RTOSII/base_stm32f446re_mem_dinamica_pre_tp2/app/inc</location>
 		</link>
 		<link>
 			<name>app/src</name>
 			<type>2</type>
-			<location>/home/vcanepa/Documents/STM32CubeIDE/workspace_1.18.1/base_stm32f446re_mem_dinamica_pre_tp2/app/src</location>
+			<location>/home/vcanepa/Documents/STM32CubeIDE/workspace_1.18.1_GRUPO2_RTOSII/base_stm32f446re_mem_dinamica_pre_tp2/app/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>
