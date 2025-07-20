@@ -3,7 +3,7 @@
 */*.launch
 */*.cfg
 
-**/.settings
-**/.cproject
-**/.mxproject
-**/.project
+#**/.settings
+#**/.cproject
+#**/.mxproject
+#**/.project
