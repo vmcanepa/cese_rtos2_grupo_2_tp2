@@ -49,22 +49,17 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
       git commit -m "tu mensaje que sube a github."
       git push       # aca subis tus cambios y commit a github, pero con el alivio de que no estas modificando la rama main.
       ```
-      
+    - Si el grupo actualiza la rama `main` tu rama no sufre cambios. Vos te encargas de traer lo nuevo de `main` a tu rama:
+      ```bash
+      git checkout dev_NOMBRE
+      git merge main  # esto actualiza tu repo local.
+      git push
+      ```
+            
 - **PASAR TUS CAMBIOS A LA RAMA COMÚN (`main`) **
 
   Cuando tengas mejoras significativas que ya se pueden agregar a la rama `main`:
   
-  - en github seleccionas la vista de tu rama (`dev_NOMBRE`) y apretás en el botón **Open pull request**.
-
-  - Hecho esto el resto de los integrantes se entera que hay pendiente un _merge_ de tu rama a la rama `main`. Se avisa a los demás y alguno de ellos sigue en github los pasos dentro de _pull request_, hasta que queda hecho el _merge_ a `main`.
-  - 
-	---
-
-- **TRAER LOS CAMBIOS DE RAMA COMÚN `main` A TU RAMA DE DESARROLLO**
-
-  Este es el mismo proceso de antes pero en dirección contraria: desde `main` a tu rama personal (`dev_NOMBRE`). De esta manera cuando se actualiza el `main` y vos estás listo para incorporar los cambios en tu versión de desarrollo, lo haces:
-    ```bash
-    git checkout dev_NOMBRE
-    git merge main  # esto actualiza tu repo local.
-    git push
-	---
+  - en github seleccionas la vista de tu rama (`dev_NOMBRE`) y apretás en el botón **Open pull request** Asegurate que el sentido del _pull request_ sea de tu rama a la rama `main`. Listo eso es todo..
+    
+  - ..luego otro integrante recibe el aviso de que se ha iniciado un _pull request_ y solo debe acceder desde github y apretar en **Merge pull request**. Si durante la revisión del _pull request_ se detecta un conflicto de código, arreglarlo antes de hacer **Merge pull request** (o apretar **Close pull request**).
