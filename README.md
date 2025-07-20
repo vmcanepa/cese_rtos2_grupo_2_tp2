@@ -1,7 +1,7 @@
 # Repositorio de TP 2 del grupo 2 - Sistemas Operativos de Tiempo Real (II)
 
 ## 1. Objetivo
-Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunciado de trabajo práctico 2](https://docs.google.com/document/d/1i_nvWkR8Uy2a3vuZ9dQ0bey6un-p7EYcWo7U27207WE/edit?tab=t.0#heading=h.8jl34vsv9f2z), usando como plantilla el desarrollo de trabajo práctico 1 (objetos reactivos) y aplicando lo aprendido en el curso sobre **memoria dinámica**.
+Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunciado de trabajo práctico 2](https://docs.google.com/document/d/1KQhBwUzqrjm5CotFv7kWWn0KHQ8jBhLotwkvgrg0q_s/edit?tab=t.0#heading=h.8jl34vsv9f2z), usando como plantilla el desarrollo de trabajo práctico 1 (objetos reactivos) y aplicando lo aprendido en el curso sobre **memoria dinámica**.
 
 ## 2. Integrantes de Grupo 2
 
