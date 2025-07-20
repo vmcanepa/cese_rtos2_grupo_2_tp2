@@ -23,19 +23,19 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
 
 - **Uso de ramas (`branches`) para evitar pisar cambios entre integrantes:**
 	- **Rama principal [`main`]:** En este _branch_ (rama) solo queda el código **revisado y estable**.
-	- **Ramas de desarrollo [`dev_nombre`]:** Cada integrante puede trabajar libremente en su propia rama y cuando le convenga hacer _merge_ con la rama `main`.
+	- **Ramas de desarrollo [`dev_nombre`]:** Cada integrante puede trabajar libremente en su propia rama. Luego, cuando decide hacer pull a la rama `main` lo hace con _pull request_: es un pull que inicia el usuario pero no se completa hasta que el resto del equipo no se sincroniza).
 
-### 4.1 Guía rápida:
+### 4.1 Pasos a seguir:
 
-- **CREAR TU RAMA DE TRABAJO (solo se hace una vez)**:
+- **CREA TU RAMA DE TRABAJO (solo se hace una vez)**:
 
   - Ejecutá los siguientes comandos `git` en el repositorio:
     ```bash
-      git checkout main	            # Te asegura que estás parado en el branch principal (main).
+      git checkout main	            # Te aseguras que estás parado en el branch principal (main).
       git checkout -b dev_NOMBRE    # Desde main, el usuario "NOMBRE" crea una rama para desarrollo (dev).
-      git push origin dev_NOMBRE    # La nueva rama se sube a github (desde el remoto se puede ver tanto main como dev_NOMBRE).
+      git push origin dev_NOMBRE    # La nueva rama se sube a github.
     ```
-  
+
 - **SUBIR CAMBIOS DESDE TU RAMA DE TRABAJO**
 
   Cada uno puede trabajar desde su rama (sin preocuparse de hacer subidas con riesgo de romper la versión revisada y estable):
@@ -44,28 +44,25 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
       ```bash
       git branch	 # Te dice en que rama estás trabajando actualmente (siempre debería ser la tuya evitando cambios en main).
       git checkout dev_NOMBRE	 # Si por accidente estás en otra rama, esto te asegura que ahora estás parado en tu branch de desarrollo (dev_NOMBRE).
-      # trabajar normalmente
+      # trabajar normalmente y luego subir a github...
       git add .
-      git commit -m "tu mensaje."
-      git push       # aca subis tus cambios y commit a github pero ahora con el alivio de que no estas modificando la rama main.
+      git commit -m "tu mensaje que sube a github."
+      git push       # aca subis tus cambios y commit a github, pero con el alivio de que no estas modificando la rama main.
       ```
-    - Además, **mientras trabajas en tu rama**, si te interesa ver cómo viene quedando la rama `main` (que será el proyecto **entregable**), o las ramas de tus compañeros, podés ver todo muy fácil desde Github.
+      
+- **PASAR TUS CAMBIOS A LA RAMA COMÚN (`main`) **
 
-- **ACTUALIZAR RAMA `main` CON TUS CAMBIOS**
+  Cuando tengas mejoras significativas que ya se pueden agregar a la rama `main`:
+  
+  - en github seleccionas la vista de tu rama (`dev_NOMBRE`) y apretás en el botón **Open pull request**.
 
-  Cada vez que uno de los integrantes cree que tiene algo funcionando o para compartir con el resto:
-
-	- Avisar a los demás integrantes que está **listo para hacer un _Merge_** desde `dev_NOMBRE` a `main`. Esto se puede hacer muy fácil:
-		
-		- **En Github** seleccionás tu rama (`dev_NOMBRE`) y apretás en el botón **Open pull request**. De esta manera el resto queda enterado que hay pendiente un _merge_ a la rama `main`. 
-
-		- **Observaciones:** Una **buena práctica** y simple es que un integrante (quien lo solicita) inicia el _merge_ y el resto de los integrantes (al menos uno) durante ese proceso revisa los cambios que irán a `main`. Esto asegura que en `main` se carga una versión **verificada y estable** para todos. Todo esto está resuelto usando el botón **Open pull request**.
-
+  - Hecho esto el resto de los integrantes se entera que hay pendiente un _merge_ de tu rama a la rama `main`. Se avisa a los demás y alguno de ellos sigue en github los pasos dentro de _pull request_, hasta que queda hecho el _merge_ a `main`.
+  - 
 	---
 
-- **ACTUALIZAR TU RAMA DESDE `main` (solo cuando sea necesario)**
+- **TRAER LOS CAMBIOS DE RAMA COMÚN `main` A TU RAMA DE DESARROLLO**
 
-  Este es el mismo proceso _merge_ pero en dirección contraria: desde `main` a tu rama personal (`dev_NOMBRE`). De esta manera cuando se actualiza el `main` y vos estás listo para incorporar los cambios en tu versión de desarrollo, lo haces:
+  Este es el mismo proceso de antes pero en dirección contraria: desde `main` a tu rama personal (`dev_NOMBRE`). De esta manera cuando se actualiza el `main` y vos estás listo para incorporar los cambios en tu versión de desarrollo, lo haces:
     ```bash
     git checkout dev_NOMBRE
     git pull origin main      # esto trae a tu repositorio local lo nuevo de main.
