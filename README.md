@@ -65,6 +65,6 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
   Este es el mismo proceso de antes pero en dirección contraria: desde `main` a tu rama personal (`dev_NOMBRE`). De esta manera cuando se actualiza el `main` y vos estás listo para incorporar los cambios en tu versión de desarrollo, lo haces:
     ```bash
     git checkout dev_NOMBRE
-    git pull origin main      # esto trae a tu repositorio local lo nuevo de main.
-    ```
+    git merge main  # esto actualiza tu repo local.
+    git push
 	---
