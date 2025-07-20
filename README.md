@@ -56,7 +56,7 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
       git push
       ```
             
-- **PASAR TUS CAMBIOS A LA RAMA COMÚN (`main`) **
+- **PASAR TUS CAMBIOS A LA RAMA COMÚN (`main`)**
 
   Cuando tengas mejoras significativas que ya se pueden agregar a la rama `main`:
   
