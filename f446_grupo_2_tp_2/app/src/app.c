@@ -45,6 +45,8 @@
 #include "task_ui.h"
 
 /********************** macros and definitions *******************************/
+#define QUEUE_LENGTH_            (10)
+#define QUEUE_ITEM_SIZE_         (sizeof(msg_t*))
 
 /********************** internal data declaration ****************************/
 
@@ -53,20 +55,13 @@
 /********************** internal data definition *****************************/
 
 /********************** external data declaration *****************************/
-
-ao_led_handle_t led_red, led_green, led_blue;
+QueueHandle_t hqueue;
 
 /********************** external functions definition ************************/
 void app_init(void)
 {
 
 	BaseType_t status;
-
-	ao_ui_init();
-
-	ao_led_init(&led_red, AO_LED_COLOR_RED);
-	ao_led_init(&led_green, AO_LED_COLOR_GREEN);
-	ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
 	while (pdPASS != status) { /* error */ }

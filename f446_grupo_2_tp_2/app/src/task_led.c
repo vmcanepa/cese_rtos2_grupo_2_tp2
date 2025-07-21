@@ -33,7 +33,6 @@
  */
 
 /********************** inclusions *******************************************/
-
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -47,18 +46,16 @@
 #include "task_led.h"
 
 /********************** macros and definitions *******************************/
+#define TASK_PERIOD_MS_			(1000)
 
-#define TASK_PERIOD_MS_ 		(1000)
-
-#define QUEUE_LED_LENGTH_ 		(1)
-#define QUEUE_LED_ITEM_SIZE_ 	(sizeof(ao_led_message_t))
+#define QUEUE_LED_LENGTH_		(1)
+#define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_action_t))
 
 /********************** internal data declaration ****************************/
 /********************** internal functions declaration ***********************/
 /********************** internal data definition *****************************/
+typedef enum {
 
-typedef enum
-{
 	LED_COLOR_NONE,
 	LED_COLOR_RED,
 	LED_COLOR_GREEN,
@@ -67,60 +64,70 @@ typedef enum
 	LED_COLOR__N,
 } led_color_t;
 
-static GPIO_TypeDef *led_port_[] = {LED_RED_PORT, LED_GREEN_PORT, LED_BLUE_PORT};
-static uint16_t led_pin_[] = {LED_RED_PIN, LED_GREEN_PIN, LED_BLUE_PIN};
+static GPIO_TypeDef* led_port_[] = {LED_RED_PORT, LED_GREEN_PORT,  LED_BLUE_PORT};
+static uint16_t led_pin_[] = {LED_RED_PIN,  LED_GREEN_PIN, LED_BLUE_PIN };
 
 /********************** external data definition *****************************/
 /********************** internal functions definition ************************/
 /********************** external functions definition ************************/
-
 static void task_led(void *argument) {
 
 	ao_led_handle_t * hao = (ao_led_handle_t*)argument;
 
-//	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
+	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
 	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
 
 	while (true) {
 
-	    ao_led_message_t msg;
-	    if (pdPASS == xQueueReceive(hao->hqueue, &msg, portMAX_DELAY))
-	    {
-	      if(AO_LED_MESSAGE_ON == msg.action) {
-	  		  LOGGER_INFO("[LED] LED %d: mensaje ON recibido (ID=%d)", hao->color, msg.id);
-	          HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
-	  		  vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
-	  		  LOGGER_INFO("[LED] LED %d: se termina el tiempo de encendido (ID=%d)", hao->color, msg.id);
-	  		  HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
-	      }
-	    }
+		ao_led_action_t msg;
+
+		if (pdPASS == xQueueReceive(hao->hqueue, &msg, portMAX_DELAY)) {
+
+			LOGGER_INFO("[LED] LED %d: mensaje recibido (msg=%d)", hao->color, msg);
+			HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
+		}
+		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+		HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+		ao_led_delete(hao);
 	}
 }
 
-void ao_led_init(ao_led_handle_t *hao, ao_led_color color) {
+void ao_led_init(ao_led_handle_t* hao, ao_led_color color) {
 
 	hao->color = color;
 
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
-	while (NULL == hao->hqueue) { /*error*/ }
+	while(NULL == hao->hqueue) {/*error*/}
 
 	BaseType_t status;
-	status = xTaskCreate(task_led, "task_ao_led", 128, (void *const)hao, tskIDLE_PRIORITY, NULL);
-	while (pdPASS != status) { /*error*/ }
+	status = xTaskCreate(task_led, "task_ao_led", 128, (void*)hao, tskIDLE_PRIORITY, NULL);
+	while (pdPASS != status) {/*error*/}
 }
 
-bool ao_led_send(ao_led_handle_t *hao, ao_led_message_t *msg) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg) {
 
-	//LOGGER_INFO("[LED] Enviando mensaje a cola: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
-	BaseType_t status = xQueueSend(hao->hqueue, (void *)msg, 0);
+	LOGGER_INFO("[LED] Enviando mensaje a cola: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
+	BaseType_t status = xQueueSend(hao->hqueue, &msg, 0);
 
 	if (status != pdPASS) {
 
-		LOGGER_INFO("[LED] LED %d: cola llena (hqueue=%p), mensaje perdido (ID=%d)", hao->color, (void *)hao->hqueue, (int)msg->id);
+		LOGGER_INFO("[LED] LED %d: cola llena, mensaje perdido (id=%d)", hao->color, (int)&msg);
 	} else {
 
-		LOGGER_INFO("[LED] LED %d: mensaje enviado (ID=%d)", hao->color, (int)msg->id);
+	    LOGGER_INFO("[LED] LED %d: mensaje enviado (id=%d)", hao->color, (int)&msg);
 	}
 	return (status == pdPASS);
+}
+
+void ao_led_delete(ao_led_handle_t* hao) {
+
+	if (hao->hqueue != NULL) {
+
+		vQueueDelete(hao->hqueue);
+		hao->hqueue = NULL;
+		LOGGER_INFO("[LED] Cola eliminada: color=%d", hao->color);
+	}
+	LOGGER_INFO("[LED] Elimino tarea led");
+	vTaskDelete(NULL);
 }
 /********************** end of file ******************************************/
