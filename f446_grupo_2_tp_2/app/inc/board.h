@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /********************** inclusions *******************************************/
-
+#include "stm32f4xx_hal_gpio.h"
 /********************** macros ***********************************************/
 #define NUCLEO_F103RC		(0)
 #define NUCLEO_F401RE		(1)
@@ -57,9 +57,8 @@ extern "C" {
 
 
 /* ToDo: Elegir a continuacion una configuracion para la compilaciOn: */
-//#define GRUPO2_JEZ /* DESCOMENTAR ESTA LINEA PARA USAR CONFIGURACION DE JEZABEL; COMENTAR LOS OTROS DOS DEFINE (MAR y VIC) */
 //#define GRUPO2_MAR /* DESCOMENTAR ESTA LINEA PARA USAR CONFIGURACION DE MARIANO; COMENTAR LOS OTROS DOS DEFINE (JEZ y VIC) */
-#define GRUPO2_VIC /* DESCOMENTAR ESTA LINEA PARA USAR CONFIGURACION DE VICTOR;  COMENTAR LOS OTROS DOS DEFINE (JEZ y MAR) */
+//#define GRUPO2_VIC /* DESCOMENTAR ESTA LINEA PARA USAR CONFIGURACION DE VICTOR;  COMENTAR LOS OTROS DOS DEFINE (JEZ y MAR) */
 
 
 #ifdef GRUPO2_JEZ
@@ -107,19 +106,25 @@ extern "C" {
 	// Leds pullup
 	#define LED_ON		GPIO_PIN_RESET
 	#define LED_OFF		GPIO_PIN_SET
-#elif
+#else
 	#define LED_ON		GPIO_PIN_SET
 	#define LED_OFF		GPIO_PIN_RESET
 #endif
 
 # ifdef BOTONERA
 	// pines y leds de la botonera
-	#define LED_A_PIN	LD1_Pin
-	#define LED_B_PIN	LD2_Pin
-	#define LED_C_PIN	LD3_Pin
-	#define LED_A_PORT	LD1_GPIO_Port
-	#define LED_B_PORT	LD2_GPIO_Port
-	#define LED_C_PORT	LD3_GPIO_Port
+	#define LD1_Pin GPIO_PIN_6
+	#define LD1_GPIO_Port GPIOA
+	#define LD2_Pin GPIO_PIN_5
+	#define LD2_GPIO_Port GPIOA
+	#define LD3_Pin GPIO_PIN_7
+	#define LD3_GPIO_Port GPIOA
+	#define BT1_Pin GPIO_PIN_9
+	#define BT1_GPIO_Port GPIOA
+	#define BT2_Pin GPIO_PIN_6
+	#define BT2_GPIO_Port GPIOB
+	#define BT3_Pin GPIO_PIN_7
+	#define BT3_GPIO_Port GPIOC
 
 	#define LED_RED_PIN		LD1_Pin
 	#define LED_BLUE_PIN	LD2_Pin
@@ -131,12 +136,6 @@ extern "C" {
 	#define BTN_PIN		B1_Pin
 	#define BTN_PORT	B1_GPIO_Port
 
-	#define BTN_A_PIN	BT1_Pin
-	#define BTN_B_PIN	BT2_Pin
-	#define BTN_C_PIN	BT3_Pin
-	#define BTN_A_PORT	BT1_GPIO_Port
-	#define BTN_B_PORT	BT2_GPIO_Port
-	#define BTN_C_PORT	BT3_GPIO_Port
 #endif /* BOTONERA */
 
 #endif/* STM32 Nucleo Boards - 144 Pins */

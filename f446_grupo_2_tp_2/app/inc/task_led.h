@@ -45,43 +45,41 @@ extern "C" {
 /********************** macros ***********************************************/
 
 /********************** typedef **********************************************/
-typedef enum
-{
+typedef enum {
+
   AO_LED_MESSAGE_ON,
   AO_LED_MESSAGE_OFF,
-//  AO_LED_MESSAGE_BLINK,
   AO_LED_MESSAGE__N,
 } ao_led_action_t;
 
+typedef enum {
 
-typedef struct
-{
-    int id;					/* seguimiento de ID de eventos al objeto activo */
-    ao_led_action_t action; 		/* accionamiento con el evento (mensaje) */
-//    ao_led_cb_t callback;
-//    int value;
-} ao_led_message_t;
-
-
-typedef enum
-{
   AO_LED_COLOR_RED,
   AO_LED_COLOR_GREEN,
   AO_LED_COLOR_BLUE,
 } ao_led_color;
 
-typedef struct
-{
+typedef struct {
+
     ao_led_color color;
     QueueHandle_t hqueue;
 } ao_led_handle_t;
+
+typedef struct ao_led_message_s ao_led_message_t;
+
+typedef void (*ui_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
+
+struct ao_led_message_s{
+	ao_led_action_t action;
+	ui_callback_t process_cb;
+};
 /********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/
 
 void ao_led_init(ao_led_handle_t* hao, ao_led_color color);
-bool ao_led_send(ao_led_handle_t* hao, ao_led_message_t* msg);
-
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg);
+void ao_led_delete(ao_led_handle_t* hao);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }

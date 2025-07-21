@@ -22,6 +22,12 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+/* Demo includes. */
+#include "logger.h"
+#include "dwt.h"
+
+/* Application includes. */
+#include "app.h"
 
 /* USER CODE END Includes */
 
@@ -60,7 +66,7 @@ void StartDefaultTask(void const * argument);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern void initialise_monitor_handles(void);
 /* USER CODE END 0 */
 
 /**
@@ -71,7 +77,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+  initialise_monitor_handles();
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -120,6 +126,7 @@ int main(void)
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
+  app_init();
   /* USER CODE END RTOS_THREADS */
 
   /* Start scheduler */
@@ -253,7 +260,36 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
+#ifdef GRUPO2_JEZ
+  	HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+  	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, GPIO_PIN_SET);
 
+	/*Configure GPIO pins : LD1_Pin LD3_Pin */
+	GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : BT1_Pin */
+	GPIO_InitStruct.Pin = GPIO_PIN_9;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : BT2_Pin */
+	GPIO_InitStruct.Pin = GPIO_PIN_6;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+	/*Configure GPIO pin : BT3_Pin */
+	GPIO_InitStruct.Pin = GPIO_PIN_7;
+	GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+	GPIO_InitStruct.Pull = GPIO_NOPULL;
+	HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+#endif
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
