@@ -54,10 +54,6 @@
 #define BUTTON_LONG_TIMEOUT_      (2000)
 
 /********************** internal data declaration ****************************/
-/********************** internal functions declaration ***********************/
-/********************** internal data definition *****************************/
-/********************** external data definition *****************************/
-/********************** internal functions definition ************************/
 typedef enum {
 
 	BUTTON_TYPE_NONE,
@@ -67,11 +63,14 @@ typedef enum {
 	BUTTON_TYPE__N,
 } button_type_t;
 
+/********************** internal functions declaration ***********************/
+/********************** internal data definition *****************************/
 static struct {
-
+	button_type_t estado;
     uint32_t counter;
 } button;
-
+/********************** external data definition *****************************/
+/********************** internal functions definition ************************/
 static void button_init_(void) {
 
 	button.counter = 0;
@@ -80,9 +79,7 @@ static void button_init_(void) {
 static button_type_t button_process_state_(bool value) {
 
 	button_type_t ret = BUTTON_TYPE_NONE;
-//#ifdef GRUPO2_JEZ
-//	value = !value;
-//#endif
+
 	if(value) {
 
 		button.counter += BUTTON_PERIOD_MS_;
@@ -107,6 +104,9 @@ static button_type_t button_process_state_(bool value) {
 void task_button(void* argument) {
 
 	button_init_();
+	// por ahora la creo aca
+//	LOGGER_INFO("[BUTTON] creo tarea UI");
+//	ao_ui_init();
 
 	while(true) {
 
@@ -121,19 +121,19 @@ void task_button(void* argument) {
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
-				LOGGER_INFO("[BUTTON] creo tarea UI");
+//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] pulso enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
 				break;
 			case BUTTON_TYPE_SHORT:
-				LOGGER_INFO("[BUTTON] creo tarea UI");
+//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] corto enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
 				break;
 			case BUTTON_TYPE_LONG:
-				LOGGER_INFO("[BUTTON] creo tarea UI");
+//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] largo enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_LONG);

@@ -44,6 +44,7 @@
 #include "dwt.h"
 
 #include "task_led.h"
+#include "task_ui.h"
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_			(1000)
@@ -88,6 +89,7 @@ static void task_led(void *argument) {
 		}
 		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
 		HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+		ao_ui_callback();  // TODO: avisa a UI que termino de procesar (deberia estar en el mensaje)
 		ao_led_delete(hao);
 	}
 }

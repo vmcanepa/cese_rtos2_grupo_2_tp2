@@ -65,8 +65,8 @@ typedef struct
 
 void ao_ui_init(void);
 bool ao_ui_send_event(msg_event_t msg);
-void ao_delete(void);
-
+void ao_ui_delete(void);
+void ao_ui_callback(void);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }
