@@ -65,9 +65,14 @@ typedef struct {
     QueueHandle_t hqueue;
 } ao_led_handle_t;
 
-typedef struct {
+typedef struct ao_led_message_s ao_led_message_t;
+
+typedef void (*ui_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
+
+struct ao_led_message_s{
 	ao_led_action_t action;
-} ao_led_message_t;
+	ui_callback_t process_cb;
+};
 /********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/

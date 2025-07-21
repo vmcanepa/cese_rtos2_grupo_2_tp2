@@ -41,7 +41,7 @@ extern "C" {
 #endif
 
 /********************** inclusions *******************************************/
-
+#include "task_led.h"
 /********************** macros ***********************************************/
 
 /********************** typedef **********************************************/
@@ -53,12 +53,18 @@ typedef enum {
 	MSG_EVENT__N,
 } msg_event_t;
 
-typedef struct
+typedef struct msg_s msg_t;
+
+typedef void (*btn_callback_t)(msg_t* pmsg); // cuando UI termina, le avisa a button
+
+struct msg_s
 {
     size_t size;
     msg_event_t data;
     bool msg_entregado;
-} msg_t;
+    btn_callback_t process_cb;
+};
+
 /********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/
@@ -66,7 +72,7 @@ typedef struct
 void ao_ui_init(void);
 bool ao_ui_send_event(msg_event_t msg);
 void ao_ui_delete(void);
-void ao_ui_callback(void);
+void ao_ui_callback(ao_led_message_t* pmsg);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }

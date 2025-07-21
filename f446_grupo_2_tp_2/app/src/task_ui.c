@@ -44,7 +44,7 @@
 #include "dwt.h"
 
 #include "task_ui.h"
-#include "task_led.h"
+#include "task_button.h"
 
 /********************** macros and definitions *******************************/
 #define QUEUE_LENGTH_            (10)
@@ -86,18 +86,21 @@ static void task_ui(void *argument) {
 						LOGGER_INFO("[UI] Estado RED");
 						ao_led_send(&led_red, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_RED;
+						pmsg->process_cb(pmsg);
 						break;
 					case MSG_EVENT_BUTTON_SHORT:
 						ao_led_init(&led_green, AO_LED_COLOR_GREEN);
 						LOGGER_INFO("[UI] Estado GREEN");
 						ao_led_send(&led_green, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_GREEN;
+						pmsg->process_cb(pmsg);
 						break;
 					case MSG_EVENT_BUTTON_LONG:
 						ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
 						LOGGER_INFO("[UI] Estado BLUE");
 						ao_led_send(&led_blue, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_BLUE;
+						pmsg->process_cb(pmsg);
 						break;
 					default:
 						break;
@@ -139,6 +142,7 @@ bool ao_ui_send_event(msg_event_t msg) {
 		pmsg->size = sizeof(msg_t);
 		pmsg->msg_entregado = false;
 		pmsg->data = msg;
+		pmsg->process_cb = button_callback;
 //		LOGGER_INFO("[UI] hqueue = %p", (void*)hqueue);
 		status = xQueueSend(hqueue, (void*)&pmsg, 0);
 
@@ -169,8 +173,10 @@ void ao_ui_delete(void) {
 	}
 }
 
-void ao_ui_callback(void){
-	// cuando el led termina de procesar se llama este callback para volver la UI a SB (y liberar la mem del msg luego)
+void ao_ui_callback(ao_led_message_t* pmsg){
+	// cuando el led termina de procesar se llama este callback para volver la UI a SB y liberar la mem del msg
+	vPortFree((void*)pmsg);
+	LOGGER_INFO("[UI] Callback: memoria liberada");
 	estado_ui = UI_STATE_STANDBY;
 	LOGGER_INFO("[UI] Callback: Estado STANDBY");
 }

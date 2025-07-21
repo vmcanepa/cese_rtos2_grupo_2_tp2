@@ -78,12 +78,7 @@ static void task_led(void *argument) {
 
 	ao_led_handle_t * hao = (ao_led_handle_t*)argument;
 
-	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
-//	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
-
 	while (true) {
-
-//		ao_led_action_t msg;
 		ao_led_message_t* pmsg;
 
 		if (pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
@@ -93,8 +88,8 @@ static void task_led(void *argument) {
 		}
 		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
 		turnOffLed(hao);
-		ao_ui_callback();  // TODO: avisa a UI que termino de procesar (deberia estar en el mensaje)
-		ao_led_delete(hao);
+		pmsg->process_cb(pmsg); // avisa a UI que termino
+		ao_led_delete(hao);		// y se suicida
 	}
 }
 
@@ -105,6 +100,7 @@ void ao_led_init(ao_led_handle_t* hao, ao_led_color color) {
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
 	while(NULL == hao->hqueue) {/*error*/}
 
+	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
 	BaseType_t status;
 	status = xTaskCreate(task_led, "task_ao_led", 128, (void*)hao, tskIDLE_PRIORITY, NULL);
 	while (pdPASS != status) {/*error*/}
@@ -118,6 +114,7 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg) {
 	{
 		LOGGER_INFO("[LED] Memoria alocada: %d", sizeof(msg_t));
 		pmsg->action = *msg;
+		pmsg->process_cb = ao_ui_callback;
 		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
 		if(pdPASS == status) {
 			LOGGER_INFO("[LED] mensaje enviado");

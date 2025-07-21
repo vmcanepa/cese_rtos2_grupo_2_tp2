@@ -43,7 +43,7 @@
 #include "logger.h"
 #include "dwt.h"
 
-#include "task_ui.h"
+#include "task_button.h"
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
@@ -104,9 +104,6 @@ static button_type_t button_process_state_(bool value) {
 void task_button(void* argument) {
 
 	button_init_();
-	// por ahora la creo aca
-//	LOGGER_INFO("[BUTTON] creo tarea UI");
-//	ao_ui_init();
 
 	while(true) {
 
@@ -121,19 +118,16 @@ void task_button(void* argument) {
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
-//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] pulso enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
 				break;
 			case BUTTON_TYPE_SHORT:
-//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] corto enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
 				break;
 			case BUTTON_TYPE_LONG:
-//				LOGGER_INFO("[BUTTON] creo tarea UI");
 				ao_ui_init();
 				LOGGER_INFO("[BUTTON] largo enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_LONG);
@@ -146,4 +140,9 @@ void task_button(void* argument) {
 	}
 }
 
+void button_callback(msg_t* pmsg){
+	// cuando la UI termina de procesar, liberar la mem del msg
+	vPortFree((void*)pmsg);
+	LOGGER_INFO("[BUTTON] Callback: memoria liberada");
+}
 /********************** end of file ******************************************/
