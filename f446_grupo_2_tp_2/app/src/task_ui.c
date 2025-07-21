@@ -47,8 +47,8 @@
 #include "task_led.h"
 
 /********************** macros and definitions *******************************/
-#define QUEUE_LENGTH_            (1)
-#define QUEUE_ITEM_SIZE_         (sizeof(msg_event_t))
+#define QUEUE_LENGTH_            (10)
+#define QUEUE_ITEM_SIZE_         (sizeof(msg_t*))
 
 /********************** internal data declaration ****************************/
 /********************** internal functions declaration ***********************/
@@ -76,26 +76,26 @@ static void task_ui(void *argument) {
 		if(estado_ui == UI_STATE_STANDBY){ // solo va a procesar nuevos mensajes si esta en SB
 
 			msg_t* pmsg;
-			LOGGER_INFO("[UI running] hqueue = %p", (void*)hqueue);
+//			LOGGER_INFO("[UI running] hqueue = %p", (void*)hqueue);
 			if (pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 1000)) {
 
 				switch (pmsg->data) {
 
 					case MSG_EVENT_BUTTON_PULSE:
 						ao_led_init(&led_red, AO_LED_COLOR_RED);
-						LOGGER_INFO("[UI] estado led red");
+						LOGGER_INFO("[UI] Estado RED");
 						ao_led_send(&led_red, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_RED;
 						break;
 					case MSG_EVENT_BUTTON_SHORT:
 						ao_led_init(&led_green, AO_LED_COLOR_GREEN);
-						LOGGER_INFO("[UI] estado led green");
+						LOGGER_INFO("[UI] Estado GREEN");
 						ao_led_send(&led_green, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_GREEN;
 						break;
 					case MSG_EVENT_BUTTON_LONG:
 						ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
-						LOGGER_INFO("[UI] estado led blue");
+						LOGGER_INFO("[UI] Estado BLUE");
 						ao_led_send(&led_blue, AO_LED_MESSAGE_ON);
 						estado_ui = UI_STATE_BLUE;
 						break;
@@ -117,6 +117,10 @@ void ao_ui_init(void)
 	// agrego logica para que se cree la tarea solo si no hay una corriendo
 	if(estado_ui == UI_STATE_DELETED) {
 		LOGGER_INFO("[UI] Se crea la tarea UI");
+		hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
+		while(NULL == hqueue) {	}
+		LOGGER_INFO("[UI] hqueue = %p", (void*)hqueue);
+
 		BaseType_t status;
 		status = xTaskCreate(task_ui, "task_ao_ui", 128, NULL, tskIDLE_PRIORITY, NULL);
 		while (pdPASS != status) { }
@@ -135,7 +139,7 @@ bool ao_ui_send_event(msg_event_t msg) {
 		pmsg->size = sizeof(msg_t);
 		pmsg->msg_entregado = false;
 		pmsg->data = msg;
-		LOGGER_INFO("[UI] hqueue = %p", (void*)hqueue);
+//		LOGGER_INFO("[UI] hqueue = %p", (void*)hqueue);
 		status = xQueueSend(hqueue, (void*)&pmsg, 0);
 
 		if(pdPASS == status) {
@@ -168,6 +172,6 @@ void ao_ui_delete(void) {
 void ao_ui_callback(void){
 	// cuando el led termina de procesar se llama este callback para volver la UI a SB (y liberar la mem del msg luego)
 	estado_ui = UI_STATE_STANDBY;
-	LOGGER_INFO("[UI] Vuelve a SB");
+	LOGGER_INFO("[UI] Callback: Estado STANDBY");
 }
 /********************** end of file ******************************************/

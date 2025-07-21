@@ -45,8 +45,6 @@
 #include "task_ui.h"
 
 /********************** macros and definitions *******************************/
-#define QUEUE_LENGTH_            (10)
-#define QUEUE_ITEM_SIZE_         (sizeof(msg_t*))
 
 /********************** internal data declaration ****************************/
 
@@ -62,9 +60,6 @@ void app_init(void)
 {
 
 	BaseType_t status;
-	hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
-	while(NULL == hqueue) {	}
-	LOGGER_INFO("[APP] hqueue = %p", (void*)hqueue);
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
 	while (pdPASS != status) { /* error */ }

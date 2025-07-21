@@ -50,7 +50,7 @@
 #define TASK_PERIOD_MS_			(1000)
 
 #define QUEUE_LED_LENGTH_		(1)
-#define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_action_t))
+#define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_message_t*))
 
 /********************** internal data declaration ****************************/
 /********************** internal functions declaration ***********************/
@@ -70,25 +70,29 @@ static uint16_t led_pin_[] = {LED_RED_PIN,  LED_GREEN_PIN, LED_BLUE_PIN };
 
 /********************** external data definition *****************************/
 /********************** internal functions definition ************************/
+void turnOnLed(ao_led_handle_t* hao)   { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON); }
+void turnOffLed(ao_led_handle_t* hao)  { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF); }
 /********************** external functions definition ************************/
+
 static void task_led(void *argument) {
 
 	ao_led_handle_t * hao = (ao_led_handle_t*)argument;
 
 	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
-	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+//	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
 
 	while (true) {
 
-		ao_led_action_t msg;
+//		ao_led_action_t msg;
+		ao_led_message_t* pmsg;
 
-		if (pdPASS == xQueueReceive(hao->hqueue, &msg, portMAX_DELAY)) {
+		if (pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
 
-			LOGGER_INFO("[LED] LED %d: mensaje recibido (msg=%d)", hao->color, msg);
-			HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
+			LOGGER_INFO("[LED] LED %d: mensaje recibido (msg=%d)", hao->color, pmsg->action);
+			turnOnLed(hao);
 		}
 		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
-		HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+		turnOffLed(hao);
 		ao_ui_callback();  // TODO: avisa a UI que termino de procesar (deberia estar en el mensaje)
 		ao_led_delete(hao);
 	}
@@ -108,16 +112,23 @@ void ao_led_init(ao_led_handle_t* hao, ao_led_color color) {
 
 bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg) {
 
-	LOGGER_INFO("[LED] Enviando mensaje a cola: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
-	BaseType_t status = xQueueSend(hao->hqueue, &msg, 0);
-
-	if (status != pdPASS) {
-
-		LOGGER_INFO("[LED] LED %d: cola llena, mensaje perdido (id=%d)", hao->color, (int)&msg);
+	BaseType_t status =  pdFAIL;
+	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
+	if(NULL != pmsg)
+	{
+		LOGGER_INFO("[LED] Memoria alocada: %d", sizeof(msg_t));
+		pmsg->action = *msg;
+		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
+		if(pdPASS == status) {
+			LOGGER_INFO("[LED] mensaje enviado");
+		} else {
+			LOGGER_INFO("[LED] mensaje no enviado");
+			vPortFree((void*)pmsg);
+			LOGGER_INFO("[LED] memoria liberada");
+		}
 	} else {
-
-	    LOGGER_INFO("[LED] LED %d: mensaje enviado (id=%d)", hao->color, (int)&msg);
-	}
+        LOGGER_INFO("[LED] Memoria insuficiente");
+    }
 	return (status == pdPASS);
 }
 
@@ -129,7 +140,7 @@ void ao_led_delete(ao_led_handle_t* hao) {
 		hao->hqueue = NULL;
 		LOGGER_INFO("[LED] Cola eliminada: color=%d", hao->color);
 	}
-	LOGGER_INFO("[LED] Elimino tarea led");
+	LOGGER_INFO("[LED] Elimino tarea led color=%d", hao->color);
 	vTaskDelete(NULL);
 }
 /********************** end of file ******************************************/
