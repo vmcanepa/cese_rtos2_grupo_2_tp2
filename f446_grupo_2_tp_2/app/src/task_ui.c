@@ -65,6 +65,11 @@ static bool ui_running;
 static ao_led_handle_t led_red, led_green, led_blue;
 static QueueHandle_t hqueue;
 
+/********************** internal functions declaration ***********************/
+static void task_ui(void *argument);
+static void ao_ui_delete(void);
+
+/********************** internal functions definition ************************/
 static void task_ui(void *argument) {
 
 	while(true) {
@@ -115,6 +120,14 @@ static void task_ui(void *argument) {
 	}
 }
 
+static void ao_ui_delete(void) {
+
+	  LOGGER_INFO("[UI] Elimino tarea ui"); // se elimina en cualquier estado
+	  ui_running = false;
+	  vTaskDelete(NULL);
+}
+
+/********************** external functions definition ************************/
 void ao_ui_init(void) {
 
 	// agrego logica para que se cree la tarea solo si no hay una corriendo
@@ -163,16 +176,9 @@ bool ao_ui_send_event(msg_event_t msg) {
 	return status;
 }
 
-void ao_ui_delete(void) {
-
-	  LOGGER_INFO("[UI] Elimino tarea ui"); // ahora se elimina en cualquier estado
-	  ui_running = false;
-	  vTaskDelete(NULL);
-}
-
 void ao_ui_callback(ao_led_message_t* pmsg) {
 
-	// cuando el led termina de procesar se llama este callback para volver la UI a SB y liberar la mem del msg
+	// cuando el led termina de procesar se llama este callback para liberar la mem del msg
 	vPortFree((void*)pmsg);
 	LOGGER_INFO("[UI] Callback: memoria liberada");
 }

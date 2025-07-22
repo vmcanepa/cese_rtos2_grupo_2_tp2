@@ -70,7 +70,6 @@ struct msg_s
 
 void ao_ui_init(void);
 bool ao_ui_send_event(msg_event_t msg);
-void ao_ui_delete(void);
 void ao_ui_callback(ao_led_message_t* pmsg);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
