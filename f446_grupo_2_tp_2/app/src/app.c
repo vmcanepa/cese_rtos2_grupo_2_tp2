@@ -33,7 +33,6 @@
  */
 
 /********************** inclusions *******************************************/
-
 #include "main.h"
 #include "cmsis_os.h"
 #include "logger.h"
@@ -44,29 +43,15 @@
 #include "task_led.h"
 #include "task_ui.h"
 
-/********************** macros and definitions *******************************/
-
-/********************** internal data declaration ****************************/
-
-/********************** internal functions declaration ***********************/
-
-/********************** internal data definition *****************************/
-
-/********************** external data declaration *****************************/
-QueueHandle_t hqueue;
-
 /********************** external functions definition ************************/
-void app_init(void)
-{
+void app_init(void) {
 
 	BaseType_t status;
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
 	while (pdPASS != status) { /* error */ }
 
-
 	LOGGER_INFO("app init");
-
 	cycle_counter_init();
 }
 

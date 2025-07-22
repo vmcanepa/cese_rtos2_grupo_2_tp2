@@ -61,7 +61,6 @@ struct msg_s
 {
     size_t size;
     msg_event_t data;
-    bool msg_entregado;
     btn_callback_t process_cb;
 };
 

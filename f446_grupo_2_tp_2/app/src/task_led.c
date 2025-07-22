@@ -50,7 +50,6 @@
 #define QUEUE_LED_LENGTH_		(1)
 #define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_message_t*))
 
-/********************** internal data definition *****************************/
 typedef enum {
 
 	LED_COLOR_NONE,
@@ -60,14 +59,13 @@ typedef enum {
 	LED_COLOR_WHITE,
 	LED_COLOR__N,
 } led_color_t;
-
+/********************** internal data definition *****************************/
 static GPIO_TypeDef* led_port_[] = {LED_RED_PORT, LED_GREEN_PORT,  LED_BLUE_PORT};
 static uint16_t led_pin_[] = {LED_RED_PIN,  LED_GREEN_PIN, LED_BLUE_PIN };
 
 /********************** internal functions definition ************************/
-void turnOnLed(ao_led_handle_t* hao)   { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON); }
-void turnOffLed(ao_led_handle_t* hao)  { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF); }
-/********************** external functions definition ************************/
+static void turnOnLed(ao_led_handle_t* hao)   { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON); }
+static void turnOffLed(ao_led_handle_t* hao)  { HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF); }
 
 static void task_led(void *argument) {
 
@@ -79,7 +77,7 @@ static void task_led(void *argument) {
 
 		if (pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
 
-			if(pmsg->action == AO_LED_MESSAGE_ON)
+			if(AO_LED_MESSAGE_ON == pmsg->action)
 				turnOnLed(hao);
 			else
 				turnOffLed(hao);
@@ -99,18 +97,18 @@ void ao_led_init(ao_led_handle_t* hao, ao_led_color color) {
 	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
 	BaseType_t status;
 	status = xTaskCreate(task_led, "task_ao_led", 128, (void*)hao, tskIDLE_PRIORITY, NULL);
-	while (pdPASS != status) {/*error*/}
+
+	while(pdPASS != status) {/*error*/}
 }
 
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 
 	BaseType_t status =  pdFAIL;
 	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
 
 	if(NULL != pmsg) {
 
-		LOGGER_INFO("[LED] Memoria alocada: %d", sizeof(msg_t));
-		pmsg->action = *msg;
+		pmsg->action = msg;
 		pmsg->process_cb = ao_ui_callback;
 		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
 
@@ -124,9 +122,10 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg) {
 			LOGGER_INFO("[LED] memoria liberada");
 		}
 	} else {
+
         LOGGER_INFO("[LED] Memoria insuficiente");
     }
-	return (status == pdPASS);
+	return status;
 }
 
 void ao_led_delete(ao_led_handle_t* hao) {
