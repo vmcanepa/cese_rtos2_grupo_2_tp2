@@ -85,24 +85,30 @@ static void task_ui(void *argument) {
 			switch(pmsg->data) {
 
 				case MSG_EVENT_BUTTON_PULSE:
-					ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
+					if(UI_STATE_GREEN == estado_ui)
+						ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
+					else
+						ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
 					ao_led_send(&led_red, AO_LED_MESSAGE_ON);
 					estado_ui = UI_STATE_RED;
 					pmsg->process_cb(pmsg);
 					LOGGER_INFO("[UI] Estado RED");
 					break;
 				case MSG_EVENT_BUTTON_SHORT:
-					ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
+					if(UI_STATE_RED == estado_ui)
+						ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+					else
+						ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
 					ao_led_send(&led_green, AO_LED_MESSAGE_ON);
 					estado_ui = UI_STATE_GREEN;
 					LOGGER_INFO("[UI] Estado GREEN");
 					pmsg->process_cb(pmsg);
 					break;
 				case MSG_EVENT_BUTTON_LONG:
-					ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+					if(UI_STATE_RED == estado_ui)
+						ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+					else
+						ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
 					ao_led_send(&led_blue, AO_LED_MESSAGE_ON);
 					estado_ui = UI_STATE_BLUE;
 					LOGGER_INFO("[UI] Estado BLUE");
@@ -173,7 +179,7 @@ bool ao_ui_send_event(msg_event_t msg) {
 
 		LOGGER_INFO("[UI] memoria insuficiente");
 	}
-	return status;
+	return (status == pdPASS);
 }
 
 void ao_ui_callback(ao_led_message_t* pmsg) {
