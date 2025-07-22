@@ -47,8 +47,6 @@
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
-
-#define BUTTON_PERIOD_MS_         (TASK_PERIOD_MS_)
 #define BUTTON_PULSE_TIMEOUT_     (200)
 #define BUTTON_SHORT_TIMEOUT_     (1000)
 #define BUTTON_LONG_TIMEOUT_      (2000)
@@ -63,9 +61,9 @@ typedef enum {
 	BUTTON_TYPE__N,
 } button_type_t;
 
-/********************** internal functions declaration ***********************/
 /********************** internal data definition *****************************/
 static struct {
+
 	button_type_t estado;
     uint32_t counter;
 } button;
@@ -82,7 +80,7 @@ static button_type_t button_process_state_(bool value) {
 
 	if(value) {
 
-		button.counter += BUTTON_PERIOD_MS_;
+		button.counter += TASK_PERIOD_MS_;
 	} else {
 
 		if(BUTTON_LONG_TIMEOUT_ <= button.counter) {
@@ -113,8 +111,8 @@ void task_button(void* argument) {
 		button_type_t button_type;
 		button_type = button_process_state_(button_state);
 
-		switch (button_type)
-		{
+		switch(button_type) {
+
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
@@ -140,7 +138,8 @@ void task_button(void* argument) {
 	}
 }
 
-void button_callback(msg_t* pmsg){
+void button_callback(msg_t* pmsg) {
+
 	// cuando la UI termina de procesar, liberar la mem del msg
 	vPortFree((void*)pmsg);
 	LOGGER_INFO("[BUTTON] Callback: memoria liberada");
