@@ -2,9 +2,10 @@
 */Debug/*
 */*.launch
 */*.cfg
+**/Debug*/*
 
-#**/.settings
-#**/.cproject
+**/.settings
+# **/.cproject
 #**/.mxproject
 #**/.project
 

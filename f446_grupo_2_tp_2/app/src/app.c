@@ -40,8 +40,6 @@
 #include "board.h"
 
 #include "task_button.h"
-#include "task_led.h"
-#include "task_ui.h"
 
 /********************** external functions definition ************************/
 void app_init(void) {

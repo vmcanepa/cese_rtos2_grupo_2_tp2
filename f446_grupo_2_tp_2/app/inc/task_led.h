@@ -57,11 +57,11 @@ typedef enum {
   AO_LED_COLOR_RED,
   AO_LED_COLOR_GREEN,
   AO_LED_COLOR_BLUE,
-} ao_led_color;
+} ao_led_color_t;
 
 typedef struct {
 
-    ao_led_color color;
+    ao_led_color_t color;
     QueueHandle_t hqueue;
 } ao_led_handle_t;
 
@@ -78,9 +78,8 @@ struct ao_led_message_s {
 
 /********************** external functions declaration ***********************/
 
-void ao_led_init(ao_led_handle_t* hao, ao_led_color color);
+void ao_led_init(ao_led_handle_t* hao, ao_led_color_t color);
 bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg);
-void ao_led_delete(ao_led_handle_t* hao);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }

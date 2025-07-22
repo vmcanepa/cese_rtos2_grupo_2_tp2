@@ -67,7 +67,7 @@ static struct {
 	button_type_t estado;
     uint32_t counter;
 } button;
-
+/********************** external data definition *****************************/
 /********************** internal functions definition ************************/
 static void button_init_(void) {
 
