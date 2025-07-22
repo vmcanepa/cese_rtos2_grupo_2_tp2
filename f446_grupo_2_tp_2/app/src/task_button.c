@@ -117,21 +117,21 @@ void task_button(void* argument) {
 				break;
 			case BUTTON_TYPE_PULSE:
 				ao_ui_init();
-				LOGGER_INFO("[BUTTON] pulso enviado");
+				LOGGER_INFO("[BTN] pulso enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
 				break;
 			case BUTTON_TYPE_SHORT:
 				ao_ui_init();
-				LOGGER_INFO("[BUTTON] corto enviado");
+				LOGGER_INFO("[BTN] corto enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
 				break;
 			case BUTTON_TYPE_LONG:
 				ao_ui_init();
-				LOGGER_INFO("[BUTTON] largo enviado");
+				LOGGER_INFO("[BTN] largo enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_LONG);
 				break;
 			default:
-				LOGGER_INFO("[BUTTON] error");
+				LOGGER_INFO("[BTN] error");
 				break;
 		}
 		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
@@ -142,6 +142,6 @@ void button_callback(msg_t* pmsg) {
 
 	// cuando la UI termina de procesar, liberar la mem del msg
 	vPortFree((void*)pmsg);
-	LOGGER_INFO("[BUTTON] Callback: memoria liberada");
+	LOGGER_INFO("[BTN] Callback: memoria liberada");
 }
 /********************** end of file ******************************************/
