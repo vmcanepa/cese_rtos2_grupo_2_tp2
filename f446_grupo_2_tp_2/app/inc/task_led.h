@@ -69,7 +69,8 @@ typedef struct ao_led_message_s ao_led_message_t;
 
 typedef void (*ui_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
 
-struct ao_led_message_s{
+struct ao_led_message_s {
+
 	ao_led_action_t action;
 	ui_callback_t process_cb;
 };
@@ -78,7 +79,7 @@ struct ao_led_message_s{
 /********************** external functions declaration ***********************/
 
 void ao_led_init(ao_led_handle_t* hao, ao_led_color color);
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t* msg);
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg);
 void ao_led_delete(ao_led_handle_t* hao);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
