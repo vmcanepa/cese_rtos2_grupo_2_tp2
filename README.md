@@ -14,9 +14,9 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
 - Juan Manuel Cruz.
 - Sebastian Bedin.
 
-<!-- ## 4. Archivos soporte:
-[link al video](https://drive.google.com/file/d/13P8zk9Db0W95AT1wKOAUxqjPOFZNQk1W/view?usp=sharing)
--->
+ ## 4. Archivos soporte:
+[link al video](https://drive.google.com/file/d/16AN7Kxq_vrFi6v8B7Ltyof4vZbFJSvZj/view?usp=sharing)
+
 ---
 
 ## 4. Breve guía para trabajo colaborativo (organización del repositorio git)
