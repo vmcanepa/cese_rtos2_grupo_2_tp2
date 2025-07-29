@@ -43,6 +43,7 @@
 #include "logger.h"
 #include "dwt.h"
 
+#include "app.h"
 #include "task_led.h"
 #include "task_ui.h"
 
@@ -65,11 +66,11 @@ static void task_led(void *argument) {
 
 	ao_led_handle_t * hao = (ao_led_handle_t*)argument;
 
-	while (true) {
+	while(true) {
 
 		ao_led_message_t* pmsg;
 
-		if (pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
+		if(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
 
 			if(AO_LED_MESSAGE_ON == pmsg->action)
 				turnOnLed(hao);
@@ -83,7 +84,7 @@ static void task_led(void *argument) {
 
 static void ao_led_delete(ao_led_handle_t* hao) {
 
-	if (hao->hqueue != NULL) {
+	if(hao->hqueue != NULL) {
 
 		vQueueDelete(hao->hqueue);
 		hao->hqueue = NULL;
@@ -109,13 +110,16 @@ void ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 	hao->color = color;
 
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
-	while(NULL == hao->hqueue) {/*error*/}
+
+	if(NULL == hao->hqueue)
+		error_critico();
 
 	LOGGER_INFO("[LED] Cola de mensajes creada: color=%d, hqueue=%p", hao->color, (void *)hao->hqueue);
 	BaseType_t status;
 	status = xTaskCreate(task_led, "task_ao_led", 128, (void*)hao, tskIDLE_PRIORITY, NULL);
 
-	while(pdPASS != status) {/*error*/}
+	if(pdPASS != status)
+		error_critico();
 }
 
 bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
@@ -139,6 +143,7 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 			LOGGER_INFO("[LED] memoria liberada");
 		}
 	} else {
+
         LOGGER_INFO("[LED] Memoria insuficiente");
     }
 	return (status == pdPASS);

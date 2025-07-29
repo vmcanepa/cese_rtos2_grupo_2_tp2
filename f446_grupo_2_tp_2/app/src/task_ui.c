@@ -43,6 +43,7 @@
 #include "logger.h"
 #include "dwt.h"
 
+#include "app.h"
 #include "task_ui.h"
 #include "task_button.h"
 
@@ -142,12 +143,16 @@ void ao_ui_init(void) {
 		LOGGER_INFO("[UI] Se crea la tarea UI");
 		hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
 
-		while(NULL == hqueue) {/*error*/}
+		if(NULL == hqueue)
+			error_critico();
+
 		LOGGER_INFO("[UI] hqueue = %p", (void*)hqueue);
 		BaseType_t status;
 		status = xTaskCreate(task_ui, "task_ao_ui", 128, NULL, tskIDLE_PRIORITY, NULL);
 
-		while(pdPASS != status) {/*error*/}
+		if(pdPASS != status)
+			error_critico();
+
 		if(estado_ui == UI_STATE__N) estado_ui = UI_STATE_STANDBY;
 	}
 	ui_running = true;

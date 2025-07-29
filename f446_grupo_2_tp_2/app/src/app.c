@@ -39,6 +39,7 @@
 #include "dwt.h"
 #include "board.h"
 
+#include "app.h"
 #include "task_button.h"
 
 /********************** external functions definition ************************/
@@ -47,10 +48,19 @@ void app_init(void) {
 	BaseType_t status;
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
-	while (pdPASS != status) { /* error */ }
+	if(pdPASS != status)
+		error_critico();
 
 	LOGGER_INFO("app init");
 	cycle_counter_init();
 }
 
+void error_critico(void) {
+
+	  __disable_irq();
+	  while(1) {
+
+		  HAL_GPIO_WritePin(LED_RED_PORT, LED_RED_PIN, LED_ON);
+	  }
+}
 /********************** end of file ******************************************/
