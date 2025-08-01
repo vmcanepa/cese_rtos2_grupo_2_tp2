@@ -116,19 +116,22 @@ void task_button(void* argument) {
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
-				ao_ui_init();
-				LOGGER_INFO("[BTN] pulso enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
+				if(ao_ui_init()){
+					LOGGER_INFO("[BTN] pulso enviado");
+					ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
+				}
 				break;
 			case BUTTON_TYPE_SHORT:
-				ao_ui_init();
-				LOGGER_INFO("[BTN] corto enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
+				if(ao_ui_init()){
+					LOGGER_INFO("[BTN] corto enviado");
+					ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
+				}
 				break;
 			case BUTTON_TYPE_LONG:
-				ao_ui_init();
-				LOGGER_INFO("[BTN] largo enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_LONG);
+				if(ao_ui_init()){
+					LOGGER_INFO("[BTN] largo enviado");
+					ao_ui_send_event(MSG_EVENT_BUTTON_LONG);
+				}
 				break;
 			default:
 				LOGGER_INFO("[BTN] error");

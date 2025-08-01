@@ -68,7 +68,7 @@ struct msg_s
 
 /********************** external functions declaration ***********************/
 
-void ao_ui_init(void);
+bool ao_ui_init(void);
 bool ao_ui_send_event(msg_event_t msg);
 void ao_ui_callback(ao_led_message_t* pmsg);
 /********************** End of CPP guard *************************************/
