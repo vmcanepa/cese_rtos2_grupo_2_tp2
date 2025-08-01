@@ -128,10 +128,23 @@ static void task_ui(void *argument) {
 }
 
 static void ao_ui_delete(void) {
+	LOGGER_INFO("[UI] Elimina tarea UI y su cola"); 
+	
+	taskENTER_CRITICAL(); // seccion critica para que nadie mande mensajes mientras elimino todo
+		ui_running = false;
 
-	  LOGGER_INFO("[UI] Elimina tarea UI"); // se elimina en cualquier estado
-	  ui_running = false;
-	  vTaskDelete(NULL);
+		if (hqueue != NULL) {
+			msg_t* pmsg;
+
+			while(pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 0)){
+				vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
+			}
+			vQueueDelete(hqueue);
+			hqueue = NULL;
+		}
+
+	taskEXIT_CRITICAL();
+	vTaskDelete(NULL);
 }
 
 /********************** external functions definition ************************/

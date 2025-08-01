@@ -83,13 +83,20 @@ static void task_led(void *argument) {
 }
 
 static void ao_led_delete(ao_led_handle_t* hao) {
-
-	if (hao->hqueue != NULL) {
-
-		vQueueDelete(hao->hqueue);
-		hao->hqueue = NULL;
-	}
-	LOGGER_INFO("[LED] Elimina tarea led %d", hao->color);
+	LOGGER_INFO("[LED] Elimina tarea led %d y su cola", hao->color);
+	
+	taskENTER_CRITICAL(); // seccion critica para que nadie inserte mensajes mientras vacio la cola
+		if (hao->hqueue != NULL) {
+			ao_led_message_t* pmsg;
+			
+			while(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, 0)){
+				vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
+			}
+			vQueueDelete(hao->hqueue);
+			hao->hqueue = NULL;
+		}
+	
+	taskEXIT_CRITICAL();
 	vTaskDelete(NULL);
 }
 
