@@ -67,18 +67,18 @@ typedef struct {
 
 typedef struct ao_led_message_s ao_led_message_t;
 
-typedef void (*ui_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
+typedef void (*led_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
 
 struct ao_led_message_s {
 
 	ao_led_action_t action;
-	ui_callback_t process_cb;
+	led_callback_t process_cb;
 };
 /********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/
 
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg);
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFunction);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }

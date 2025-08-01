@@ -44,7 +44,6 @@
 #include "dwt.h"
 
 #include "task_led.h"
-#include "task_ui.h"
 
 /********************** macros and definitions *******************************/
 #define QUEUE_LED_LENGTH_		(1)
@@ -139,7 +138,7 @@ static bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 }
 
 /********************** external functions definition ************************/
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFunction) {
 
 	if(!ao_led_init(hao, hao->color)){ // inicializa y despues manda el msg
 		return pdFAIL;
@@ -151,7 +150,7 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 	if(NULL != pmsg) {
 
 		pmsg->action = msg;
-		pmsg->process_cb = ao_ui_callback;
+		pmsg->process_cb = cbFunction;
 		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
 
 		if(pdPASS == status) {

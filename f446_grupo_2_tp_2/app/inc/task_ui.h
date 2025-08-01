@@ -55,13 +55,13 @@ typedef enum {
 
 typedef struct msg_s msg_t;
 
-typedef void (*btn_callback_t)(msg_t* pmsg); // cuando UI termina, le avisa a button
+typedef void (*ui_callback_t)(msg_t* pmsg); // cuando UI termina, le avisa a button
 
 struct msg_s
 {
     size_t size;
     msg_event_t data;
-    btn_callback_t process_cb;
+    ui_callback_t process_cb;
 };
 
 /********************** external data declaration ****************************/
@@ -69,7 +69,7 @@ struct msg_s
 /********************** external functions declaration ***********************/
 
 bool ao_ui_init(void);
-bool ao_ui_send_event(msg_event_t msg);
+bool ao_ui_send_event(msg_event_t msg, ui_callback_t cbFunction);
 void ao_ui_callback(ao_led_message_t* pmsg);
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus

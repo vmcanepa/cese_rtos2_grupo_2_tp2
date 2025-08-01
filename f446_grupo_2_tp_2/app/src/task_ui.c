@@ -44,7 +44,6 @@
 #include "dwt.h"
 
 #include "task_ui.h"
-#include "task_button.h"
 
 /********************** macros and definitions *******************************/
 #define QUEUE_LENGTH_            (10)
@@ -91,10 +90,10 @@ static void task_ui(void *argument) {
 					if(UI_STATE_STANDBY == estado_ui)
 						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_GREEN == estado_ui)
-						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_BLUE == estado_ui)
-						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-					if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON)){
+						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON, ao_ui_callback)){
 						estado_ui = UI_STATE_RED;
 						LOGGER_INFO("[UI] Estado RED");
 					}
@@ -105,10 +104,10 @@ static void task_ui(void *argument) {
 					if(UI_STATE_STANDBY == estado_ui)
 						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_RED == estado_ui)
-						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_BLUE == estado_ui)
-						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-					if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON)){
+						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON, ao_ui_callback)){
 						estado_ui = UI_STATE_GREEN;
 						LOGGER_INFO("[UI] Estado GREEN");
 					}
@@ -119,10 +118,10 @@ static void task_ui(void *argument) {
 					if(UI_STATE_STANDBY == estado_ui)
 						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_RED == estado_ui)
-						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_GREEN == estado_ui)
-						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-					if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON)){
+						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON, ao_ui_callback)){
 						estado_ui = UI_STATE_BLUE;
 						LOGGER_INFO("[UI] Estado BLUE");
 					}
@@ -190,7 +189,7 @@ bool ao_ui_init(void) {
 	return true;
 }
 
-bool ao_ui_send_event(msg_event_t msg) {
+bool ao_ui_send_event(msg_event_t msg, ui_callback_t cbFunction) {
 
 	BaseType_t status =  pdFAIL;
 	msg_t* pmsg = (msg_t*)pvPortMalloc(sizeof(msg_t));
@@ -200,7 +199,7 @@ bool ao_ui_send_event(msg_event_t msg) {
 		LOGGER_INFO("[UI] memoria alocada: %d", sizeof(msg_t));
 		pmsg->size = sizeof(msg_t);
 		pmsg->data = msg;
-		pmsg->process_cb = button_callback;
+		pmsg->process_cb = cbFunction;
 		status = xQueueSend(hqueue, (void*)&pmsg, 0);
 
 		if(pdPASS == status) {
