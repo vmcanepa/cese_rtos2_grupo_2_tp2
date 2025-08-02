@@ -49,18 +49,10 @@ void app_init(void) {
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
 	if(pdPASS != status)
-		error_critico();
+		while(1);
 
 	LOGGER_INFO("app init");
 	cycle_counter_init();
 }
 
-void error_critico(void) {
-
-	  __disable_irq();
-	  while(1) {
-
-		  HAL_GPIO_WritePin(LED_RED_PORT, LED_RED_PIN, LED_ON);
-	  }
-}
 /********************** end of file ******************************************/

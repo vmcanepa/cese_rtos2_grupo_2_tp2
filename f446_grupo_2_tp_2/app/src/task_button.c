@@ -44,6 +44,8 @@
 #include "dwt.h"
 
 #include "task_button.h"
+#include "task_ao.h"
+
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
@@ -116,17 +118,17 @@ void task_button(void* argument) {
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
-				ao_ui_init();
+				task_ao_init();
 				LOGGER_INFO("[BUTTON] pulso enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE);
 				break;
 			case BUTTON_TYPE_SHORT:
-				ao_ui_init();
+				task_ao_init();
 				LOGGER_INFO("[BUTTON] corto enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT);
 				break;
 			case BUTTON_TYPE_LONG:
-				ao_ui_init();
+				task_ao_init();
 				LOGGER_INFO("[BUTTON] largo enviado");
 				ao_ui_send_event(MSG_EVENT_BUTTON_LONG);
 				break;

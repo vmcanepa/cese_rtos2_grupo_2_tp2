@@ -50,7 +50,6 @@ extern "C" {
 
 /********************** external functions declaration ***********************/
 void app_init(void);
-void error_critico(void);
 
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus

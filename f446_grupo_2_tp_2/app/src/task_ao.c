@@ -32,59 +32,73 @@
  * @author : Sebastian Bedin <sebabedin@gmail.com>
  */
 
-#ifndef TASK_LED_H_
-#define TASK_LED_H_
-
-/********************** CPP guard ********************************************/
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /********************** inclusions *******************************************/
+#include <stdio.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-/********************** macros ***********************************************/
+#include "main.h"
+#include "cmsis_os.h"
+#include "board.h"
+#include "logger.h"
+#include "dwt.h"
 
-/********************** typedef **********************************************/
-typedef enum {
+#include "task_ao.h"
+#include "ao_ui.h"
+#include "ao_led.h"
 
-  AO_LED_MESSAGE_ON,
-  AO_LED_MESSAGE_OFF,
-  AO_LED_MESSAGE__N,
-} ao_led_action_t;
+/********************** macros and definitions *******************************/
+#define TASK_PERIOD_MS_           (50)
 
-typedef enum {
 
-  AO_LED_COLOR_RED,
-  AO_LED_COLOR_GREEN,
-  AO_LED_COLOR_BLUE,
-} ao_led_color_t;
+/********************** internal data definition *****************************/
+static bool ao_running;
+ao_led_handle_t led_red, led_green, led_blue;
 
-typedef struct {
+/********************** internal functions declaration ***********************/
+static void task_ao(void* argument);
+static void task_ao_delete(void);
 
-    ao_led_color_t color;
-    QueueHandle_t hqueue;
-} ao_led_handle_t;
+/********************** internal functions definition ************************/
+static void task_ao(void* argument) {
 
-typedef struct ao_led_message_s ao_led_message_t;
 
-typedef void (*ui_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
+	ao_led_init(&led_red, AO_LED_COLOR_RED);
+	ao_led_init(&led_green, AO_LED_COLOR_GREEN);
+	ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
+	ao_ui_init();
 
-struct ao_led_message_s {
+	while(true) {
 
-	ao_led_action_t action;
-	ui_callback_t process_cb;
-};
-/********************** external data declaration ****************************/
-
-/********************** external functions declaration ***********************/
-
-void ao_led_init(ao_led_handle_t* hao, ao_led_color_t color);
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg);
-/********************** End of CPP guard *************************************/
-#ifdef __cplusplus
+		ao_ui_process();
+		ao_led_process();
+		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+	}
+	task_ao_delete();
 }
-#endif
 
-#endif /* TASK_LED_H_ */
+static void task_ao_delete(void) {
+
+	  LOGGER_INFO("[AO] Elimino tarea AO"); // se elimina en cualquier estado
+	  ao_running = false;
+	  vTaskDelete(NULL);
+}
+
+/********************** external functions definition ************************/
+bool task_ao_init(void) {
+
+	// agrego logica para que se cree la tarea solo si no hay una corriendo
+	if(!ao_running) {
+
+		BaseType_t status;
+		status = xTaskCreate(task_ao, "task_ao", 128, NULL, tskIDLE_PRIORITY, NULL);
+
+		if(pdPASS != status)
+			return false;				// salgo de ao_ui_init
+	}
+	ao_running = true;
+	LOGGER_INFO("[AO] Crea tarea AO");
+	return true;
+}
+
 /********************** end of file ******************************************/
-
