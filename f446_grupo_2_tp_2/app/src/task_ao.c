@@ -49,15 +49,16 @@
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
-
+#define NLEDS 3
 
 /********************** internal data definition *****************************/
-static bool ao_running;
+bool ao_running;
 ao_led_handle_t led_red, led_green, led_blue;
 
 /********************** internal functions declaration ***********************/
 static void task_ao(void* argument);
 static void task_ao_delete(void);
+static ao_led_handle_t haos[NLEDS];
 
 /********************** internal functions definition ************************/
 static void task_ao(void* argument) {
@@ -65,22 +66,35 @@ static void task_ao(void* argument) {
 	ao_led_init(&led_red, AO_LED_COLOR_RED);
 	ao_led_init(&led_green, AO_LED_COLOR_GREEN);
 	ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
-	ao_ui_init();
+    haos[0] = led_red;
+    haos[1] = led_green;
+    haos[2] = led_blue;
 
-	while(true) {
+	while(ao_running) {
 
 		ao_ui_process();
-		ao_led_process();
-		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+		for(uint8_t i=0; i<NLEDS; i++){
+			ao_led_handle_t hao = haos[i];
+			ao_led_process(&hao);
+		}
+//		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+		ui_running_update();
 	}
 	task_ao_delete();
 }
 
 static void task_ao_delete(void) {
 
-	  LOGGER_INFO("[AO] Elimino tarea AO"); // se elimina en cualquier estado
-	  ao_running = false;
-	  vTaskDelete(NULL);
+	LOGGER_INFO("[AO] Elimino tarea AO y cola UI"); // se elimina en cualquier estado
+	taskENTER_CRITICAL(); // seccion critica para que nadie mande mensajes mientras elimino
+//		ao_running = false; // alguien mas debe manejar este estado
+		ao_ui_queue_delete();
+		for(uint8_t i=0; i<NLEDS; i++){
+			ao_led_handle_t hao = haos[i];
+			ao_led_delete_cola(&hao);
+		}
+	taskEXIT_CRITICAL();
+	vTaskDelete(NULL);
 }
 
 /********************** external functions definition ************************/
@@ -96,6 +110,7 @@ bool task_ao_init(void) {
 			return false;				// salgo de ao_ui_init
 	}
 	ao_running = true;
+	ao_ui_init();
 	LOGGER_INFO("[AO] Crea tarea AO");
 	return true;
 }
