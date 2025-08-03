@@ -39,13 +39,12 @@ typedef struct ao_led_message_s ao_led_message_t;
 
 typedef void (*led_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
 
+/********************** external data declaration ****************************/
 struct ao_led_message_s {
 
 	ao_led_action_t action;
 	led_callback_t process_cb;
 };
-
-/********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/
 void ao_led_process(ao_led_handle_t * hao);

@@ -19,7 +19,7 @@
 #include "ao_led.h"
 
 /********************** macros and definitions *******************************/
-#define QUEUE_LED_LENGTH_		(1)
+#define QUEUE_LED_LENGTH_		(10)
 #define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_message_t*))
 
 /********************** internal data definition *****************************/
@@ -59,14 +59,13 @@ void ao_led_process(ao_led_handle_t * hao) {
 
 bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 
-//	if(!hao->color) // color toma valor 0 para AO_LED_COLOR_RED
 	hao->color = color;
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
 
 	if(NULL == hao->hqueue) {
 
 		LOGGER_INFO("[LED] Error! Falla creación de cola. Abortando init de LED %d", hao->color);
-		return false; // salgo de ao_led_init
+		return false;		// salgo de ao_led_init
 	}
 	vQueueAddToRegistry(hao->hqueue, colorNames[hao->color]);
 	LOGGER_INFO("[LED] Crea cola led %d", hao->color);
@@ -112,13 +111,12 @@ void ao_led_delete_cola(ao_led_handle_t* hao) {
 
 			while(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, 0)) {
 
-				vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
+				vPortFree((void*)pmsg);		// libero la memoria de posibles mensajes encolados
 			}
 			vQueueDelete(hao->hqueue);
 			hao->hqueue = NULL;
 		}taskEXIT_CRITICAL();
 	}
-//	vTaskDelete(NULL);
 }
 
 /********************** end of file ******************************************/

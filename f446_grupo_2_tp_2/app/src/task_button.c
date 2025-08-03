@@ -46,7 +46,6 @@
 #include "task_button.h"
 #include "task_ao.h"
 
-
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
 #define BUTTON_PULSE_TIMEOUT_     (200)
@@ -69,7 +68,10 @@ static struct {
 	button_type_t estado;
     uint32_t counter;
 } button;
-/********************** external data definition *****************************/
+/********************** internal functions declaration ***********************/
+static void button_init_(void);
+static button_type_t button_process_state_(bool value);
+
 /********************** internal functions definition ************************/
 static void button_init_(void) {
 
@@ -145,4 +147,5 @@ void button_callback(msg_t* pmsg) {
 	vPortFree((void*)pmsg);
 	LOGGER_INFO("[BUTTON] Callback: memoria liberada");
 }
+
 /********************** end of file ******************************************/
