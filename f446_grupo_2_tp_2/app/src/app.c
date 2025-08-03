@@ -48,9 +48,9 @@ void app_init(void) {
 	BaseType_t status;
 
 	status = xTaskCreate(task_button, "task_button", 128, NULL, tskIDLE_PRIORITY, NULL);
+
 	if(pdPASS != status)
 		while(1);
-
 	LOGGER_INFO("app init");
 	cycle_counter_init();
 }

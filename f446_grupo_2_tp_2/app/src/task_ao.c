@@ -62,7 +62,6 @@ static void task_ao_delete(void);
 /********************** internal functions definition ************************/
 static void task_ao(void* argument) {
 
-
 	ao_led_init(&led_red, AO_LED_COLOR_RED);
 	ao_led_init(&led_green, AO_LED_COLOR_GREEN);
 	ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
@@ -91,7 +90,7 @@ bool task_ao_init(void) {
 	if(!ao_running) {
 
 		BaseType_t status;
-		status = xTaskCreate(task_ao, "task_ao", 128, NULL, tskIDLE_PRIORITY, NULL);
+		status = xTaskCreate(task_ao, "task_ao", 128, NULL, tskIDLE_PRIORITY + 1, NULL);
 
 		if(pdPASS != status)
 			return false;				// salgo de ao_ui_init

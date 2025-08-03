@@ -1,9 +1,10 @@
 /*
- * ao_ui.c
+ * ao_led.c
  *
  *  Created on: Aug 2, 2025
  *      Author: mariano
  */
+
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -14,128 +15,99 @@
 #include "logger.h"
 #include "dwt.h"
 
-#include "ao_ui.h"
+#include "ao_led.h"
 
 /********************** macros and definitions *******************************/
-#define QUEUE_LENGTH_            (10)
-#define QUEUE_ITEM_SIZE_         (sizeof(msg_t*))
+#define QUEUE_LED_LENGTH_		(1)
+#define QUEUE_LED_ITEM_SIZE_	(sizeof(ao_led_message_t*))
 
-typedef enum {
-
-	UI_STATE_STANDBY,
-	UI_STATE_RED,
-	UI_STATE_GREEN,
-	UI_STATE_BLUE,
-	UI_STATE__N,
-} ui_state_t;
-
-
-extern ao_led_handle_t led_red, led_green, led_blue;
 /********************** internal data definition *****************************/
-static QueueHandle_t hqueue;
-static ui_state_t estado_ui = UI_STATE__N;
+static GPIO_TypeDef* led_port_[] = {LED_RED_PORT, LED_GREEN_PORT,  LED_BLUE_PORT};
+static uint16_t led_pin_[] = {LED_RED_PIN,  LED_GREEN_PIN, LED_BLUE_PIN };
+
+/********************** internal data definition *****************************/
+
 
 /********************** internal functions declaration ***********************/
+static void turnOnLed(ao_led_handle_t* hao);
+static void turnOffLed(ao_led_handle_t* hao);
+static void ao_led_delete_cola(ao_led_handle_t* hao);
 
 
-void ao_ui_process(void) {
+void ao_led_process(void) {
 
-	msg_t* pmsg;
+	ao_led_message_t* pmsg;
 
-	while(pdPASS == xQueueReceive(hqueue, (void*) &pmsg, 1000)) {
+	if (pdPASS == xQueueReceive(pmsg->hao->hqueue, (void*)&pmsg, portMAX_DELAY)) {
 
-		bool msgSent = pdFAIL;
-
-		switch(pmsg->data) {
-
-			case MSG_EVENT_BUTTON_PULSE:
-				msgSent = pdFAIL;
-				if(UI_STATE_STANDBY == estado_ui)
-					msgSent = pdPASS; // no requiere manda ningun otro mensaje
-				if(UI_STATE_GREEN == estado_ui)
-					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-				if(UI_STATE_BLUE == estado_ui)
-					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-				if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON)) {
-					estado_ui = UI_STATE_RED;
-					LOGGER_INFO("[UI] Estado RED");
-				}
-				pmsg->process_cb(pmsg);
-				break;
-			case MSG_EVENT_BUTTON_SHORT:
-				if(UI_STATE_STANDBY == estado_ui)
-					msgSent = pdPASS; // no requiere manda ningun otro mensaje
-				if(UI_STATE_RED == estado_ui)
-					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
-				if(UI_STATE_BLUE == estado_ui)
-					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-				if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON)){
-					estado_ui = UI_STATE_GREEN;
-					LOGGER_INFO("[UI] Estado GREEN");
-				}
-				pmsg->process_cb(pmsg);
-				break;
-			case MSG_EVENT_BUTTON_LONG:
-				if(UI_STATE_STANDBY == estado_ui)
-					msgSent = pdPASS; // no requiere manda ningun otro mensaje
-				if(UI_STATE_RED == estado_ui)
-					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
-				if(UI_STATE_GREEN == estado_ui)
-					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-				if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON)){
-					estado_ui = UI_STATE_BLUE;
-					LOGGER_INFO("[UI] Estado BLUE");
-				}
-				pmsg->process_cb(pmsg);
-				break;
-			default:
-				break;
-		}
-
-		// Aviso al callback del remitente (button)
-		if (pmsg->process_cb) {
-			pmsg->process_cb(pmsg);
-		}
+		if (AO_LED_MESSAGE_ON == pmsg->action)
+			turnOnLed(pmsg->hao);
+		else
+			turnOffLed(pmsg->hao);
+	    vPortFree(pmsg);
+	    ao_led_delete_cola(pmsg->hao);
 	}
 }
 
-bool ao_ui_init(void) {
+bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 
-	hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
-	if(NULL == hqueue) {
-		LOGGER_INFO("[UI] Error! Falla creación de cola. Abortando init de UI.");
-		return false; // salgo de ao_ui_init
+	if(!hao->color)
+		hao->color = color;
+	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
+
+	if(NULL == hao->hqueue) {
+
+		LOGGER_INFO("[LED] Error! Falla creación de cola. Abortando init de LED %d", hao->color);
+		return false; // salgo de ao_led_init
 	}
-
-	if(estado_ui == UI_STATE__N) estado_ui = UI_STATE_STANDBY;
-
-	LOGGER_INFO("[UI] Crea tarea UI");
+	LOGGER_INFO("[LED] Crea tarea led %d", hao->color);
 	return true;
 }
 
-bool ao_ui_send_event(msg_event_t event) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 
-	if(NULL == hqueue)
-		return false;
+	BaseType_t status =  pdFAIL;
+	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
 
-	msg_t* pmsg = pvPortMalloc(sizeof(msg_t));
+	if(NULL != pmsg) {
 
-	if(!pmsg)
-		return false;
+		pmsg->action = msg;
+		pmsg->hao = hao;
+		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
 
-	pmsg->size = sizeof(msg_t);
-	pmsg->data = event;
-	BaseType_t result = xQueueSend(hqueue, &pmsg, 0);
+		if(pdPASS == status) {
 
-	if(pdPASS != result) {
+			LOGGER_INFO("[LED] mensaje enviado");
+		} else {
 
-		vPortFree(pmsg);
-		return false;
-	}
-	return true;
+			LOGGER_INFO("[LED] mensaje no enviado");
+			vPortFree((void*)pmsg);
+			LOGGER_INFO("[LED] memoria liberada");
+		}
+	} else {
+        LOGGER_INFO("[LED] Memoria insuficiente");
+    }
+	return (status == pdPASS);
 }
 
-void ao_ui_callback(ao_led_message_t* pmsg) {
-    vPortFree((void*)pmsg);
-    LOGGER_INFO("[UI] Callback: memoria de mensaje LED liberada");
+static void turnOnLed(ao_led_handle_t* hao) {
+
+	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
+}
+
+static void turnOffLed(ao_led_handle_t* hao) {
+
+	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+}
+
+static void ao_led_delete_cola(ao_led_handle_t* hao) {
+
+	if (hao->hqueue != NULL) {
+
+		vQueueDelete(hao->hqueue);
+		hao->hqueue = NULL;
+		LOGGER_INFO("[LED] Cola eliminada para LED %d", hao->color);
+	}
+	LOGGER_INFO("[LED] Elimina tarea led %d", hao->color);
+	vTaskDelete(NULL);
 }

@@ -16,23 +16,27 @@
 
 /********************** typedef **********************************************/
 typedef enum {
+
   AO_LED_MESSAGE_ON,
   AO_LED_MESSAGE_OFF,
   AO_LED_MESSAGE__N,
 } ao_led_action_t;
 
 typedef enum {
+
   AO_LED_COLOR_RED,
   AO_LED_COLOR_GREEN,
   AO_LED_COLOR_BLUE,
 } ao_led_color_t;
 
 typedef struct {
+
   ao_led_color_t color;
   QueueHandle_t hqueue;
 } ao_led_handle_t;
 
 typedef struct {
+
   ao_led_action_t action;
   ao_led_handle_t* hao;
 } ao_led_message_t;
