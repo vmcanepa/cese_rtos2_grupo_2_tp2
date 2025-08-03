@@ -29,6 +29,8 @@ typedef enum {
 	UI_STATE__N,
 } ui_state_t;
 
+
+extern ao_led_handle_t led_red, led_green, led_blue;
 /********************** internal data definition *****************************/
 static QueueHandle_t hqueue;
 static ui_state_t estado_ui = UI_STATE__N;
@@ -40,7 +42,6 @@ void ao_ui_process(void) {
 
 	msg_t* pmsg;
 
-
 	while(pdPASS == xQueueReceive(hqueue, (void*) &pmsg, 1000)) {
 
 		bool msgSent = pdFAIL;
@@ -49,42 +50,42 @@ void ao_ui_process(void) {
 
 			case MSG_EVENT_BUTTON_PULSE:
 				msgSent = pdFAIL;
-/*				if(UI_STATE_STANDBY == estado_ui)
+				if(UI_STATE_STANDBY == estado_ui)
 					msgSent = pdPASS; // no requiere manda ningun otro mensaje
 				if(UI_STATE_GREEN == estado_ui)
-					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
 				if(UI_STATE_BLUE == estado_ui)
-					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
-				if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON, ao_ui_callback)) {
-*/					estado_ui = UI_STATE_RED;
+					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
+				if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON)) {
+					estado_ui = UI_STATE_RED;
 					LOGGER_INFO("[UI] Estado RED");
-//				}
+				}
 				pmsg->process_cb(pmsg);
 				break;
 			case MSG_EVENT_BUTTON_SHORT:
-/*				if(UI_STATE_STANDBY == estado_ui)
+				if(UI_STATE_STANDBY == estado_ui)
 					msgSent = pdPASS; // no requiere manda ningun otro mensaje
 				if(UI_STATE_RED == estado_ui)
-					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
 				if(UI_STATE_BLUE == estado_ui)
-					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
-				if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON, ao_ui_callback)){
-*/					estado_ui = UI_STATE_GREEN;
+					msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
+				if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON)){
+					estado_ui = UI_STATE_GREEN;
 					LOGGER_INFO("[UI] Estado GREEN");
-//				}
+				}
 				pmsg->process_cb(pmsg);
 				break;
 			case MSG_EVENT_BUTTON_LONG:
-/*				if(UI_STATE_STANDBY == estado_ui)
+				if(UI_STATE_STANDBY == estado_ui)
 					msgSent = pdPASS; // no requiere manda ningun otro mensaje
 				if(UI_STATE_RED == estado_ui)
-					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
 				if(UI_STATE_GREEN == estado_ui)
-					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
-				if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON, ao_ui_callback)){
-*/					estado_ui = UI_STATE_BLUE;
+					msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
+				if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON)){
+					estado_ui = UI_STATE_BLUE;
 					LOGGER_INFO("[UI] Estado BLUE");
-//				}
+				}
 				pmsg->process_cb(pmsg);
 				break;
 			default:
@@ -134,4 +135,7 @@ bool ao_ui_send_event(msg_event_t event) {
 	return true;
 }
 
-
+void ao_ui_callback(ao_led_message_t* pmsg) {
+    vPortFree((void*)pmsg);
+    LOGGER_INFO("[UI] Callback: memoria de mensaje LED liberada");
+}

@@ -38,5 +38,6 @@ struct msg_s
 bool ao_ui_init(void);
 bool ao_ui_send_event(msg_event_t event);
 void ao_ui_process(void);
+//void ao_ui_callback(ao_led_message_t* pmsg);
 
 #endif /* INC_AO_UI_H_ */
