@@ -44,7 +44,6 @@
 #include "dwt.h"
 
 #include "task_ui.h"
-#include "task_button.h"
 
 /********************** macros and definitions *******************************/
 #define QUEUE_LENGTH_            (10)
@@ -68,7 +67,7 @@ static QueueHandle_t hqueue;
 /********************** internal functions declaration ***********************/
 static void task_ui(void *argument);
 static void ao_ui_delete(void);
-
+static void ao_ui_queue_delete(void);
 /********************** internal functions definition ************************/
 static void task_ui(void *argument) {
 
@@ -80,39 +79,52 @@ static void task_ui(void *argument) {
 	while(true) {
 
 		msg_t* pmsg;
+		bool msgSent;
 
 		if(pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 1000)) {
 
 			switch(pmsg->data) {
 
 				case MSG_EVENT_BUTTON_PULSE:
+					msgSent = pdFAIL;
+					if(UI_STATE_STANDBY == estado_ui)
+						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_GREEN == estado_ui)
-						ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_BLUE == estado_ui)
-						ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_red,  AO_LED_MESSAGE_ON);
-					estado_ui = UI_STATE_RED;
+						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_red,  AO_LED_MESSAGE_ON, ao_ui_callback)){
+						estado_ui = UI_STATE_RED;
+						LOGGER_INFO("[UI] Estado RED");
+					}
 					pmsg->process_cb(pmsg);
-					LOGGER_INFO("[UI] Estado RED");
 					break;
 				case MSG_EVENT_BUTTON_SHORT:
+					msgSent = pdFAIL;
+					if(UI_STATE_STANDBY == estado_ui)
+						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_RED == estado_ui)
-						ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_BLUE == estado_ui)
-						ao_led_send(&led_blue, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_green, AO_LED_MESSAGE_ON);
-					estado_ui = UI_STATE_GREEN;
-					LOGGER_INFO("[UI] Estado GREEN");
+						msgSent = ao_led_send(&led_blue, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_green, AO_LED_MESSAGE_ON, ao_ui_callback)){
+						estado_ui = UI_STATE_GREEN;
+						LOGGER_INFO("[UI] Estado GREEN");
+					}
 					pmsg->process_cb(pmsg);
 					break;
 				case MSG_EVENT_BUTTON_LONG:
+					msgSent = pdFAIL;
+					if(UI_STATE_STANDBY == estado_ui)
+						msgSent = pdPASS; // no requiere manda ningun otro mensaje
 					if(UI_STATE_RED == estado_ui)
-						ao_led_send(&led_red, AO_LED_MESSAGE_OFF);
+						msgSent = ao_led_send(&led_red, AO_LED_MESSAGE_OFF, ao_ui_callback);
 					if(UI_STATE_GREEN == estado_ui)
-						ao_led_send(&led_green, AO_LED_MESSAGE_OFF);
-					ao_led_send(&led_blue, AO_LED_MESSAGE_ON);
-					estado_ui = UI_STATE_BLUE;
-					LOGGER_INFO("[UI] Estado BLUE");
+						msgSent = ao_led_send(&led_green, AO_LED_MESSAGE_OFF, ao_ui_callback);
+					if(msgSent && ao_led_send(&led_blue, AO_LED_MESSAGE_ON, ao_ui_callback)){
+						estado_ui = UI_STATE_BLUE;
+						LOGGER_INFO("[UI] Estado BLUE");
+					}
 					pmsg->process_cb(pmsg);
 					break;
 				default:
@@ -128,32 +140,56 @@ static void task_ui(void *argument) {
 }
 
 static void ao_ui_delete(void) {
-
-	  LOGGER_INFO("[UI] Elimina tarea UI"); // se elimina en cualquier estado
-	  ui_running = false;
-	  vTaskDelete(NULL);
+	LOGGER_INFO("[UI] Elimina tarea UI y su cola"); 
+	
+	taskENTER_CRITICAL(); // seccion critica para que nadie mande mensajes mientras elimino
+		ui_running = false;
+		ao_ui_queue_delete();
+	taskEXIT_CRITICAL();
+	vTaskDelete(NULL);
 }
 
+static void ao_ui_queue_delete(void){
+	if (hqueue != NULL) {
+		msg_t* pmsg;
+
+		while(pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 0)){
+			vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
+		}
+		vQueueDelete(hqueue);
+		hqueue = NULL;
+	}
+}
 /********************** external functions definition ************************/
-void ao_ui_init(void) {
+bool ao_ui_init(void) {
 
 	// agrego logica para que se cree la tarea solo si no hay una corriendo
 	if(!ui_running) {
 
-		LOGGER_INFO("[UI] Crea tarea UI");
 		hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
-		while(NULL == hqueue) {/*error*/}
+		if(NULL == hqueue) {
+			LOGGER_INFO("[UI] Error! Falla creación de cola. Abortando init de UI.");
+			return false; // salgo de ao_ui_init
+		}
 		
 		BaseType_t status;
 		status = xTaskCreate(task_ui, "task_ao_ui", 128, NULL, tskIDLE_PRIORITY, NULL);
+		if(pdPASS != status) {
+			LOGGER_INFO("[UI] Error! Falla creación de tarea. Abortando init de UI.");
+			taskENTER_CRITICAL(); // seccion critica para que nadie mande mensajes mientras elimino
+				ao_ui_queue_delete();
+			taskEXIT_CRITICAL();
+			return false; // salgo de ao_ui_init
+		}
 
-		while(pdPASS != status) {/*error*/}
 		if(estado_ui == UI_STATE__N) estado_ui = UI_STATE_STANDBY;
 	}
+	LOGGER_INFO("[UI] Crea tarea UI");
 	ui_running = true;
+	return true;
 }
 
-bool ao_ui_send_event(msg_event_t msg) {
+bool ao_ui_send_event(msg_event_t msg, ui_callback_t cbFunction) {
 
 	BaseType_t status =  pdFAIL;
 	msg_t* pmsg = (msg_t*)pvPortMalloc(sizeof(msg_t));
@@ -163,7 +199,7 @@ bool ao_ui_send_event(msg_event_t msg) {
 		LOGGER_INFO("[UI] memoria alocada: %d", sizeof(msg_t));
 		pmsg->size = sizeof(msg_t);
 		pmsg->data = msg;
-		pmsg->process_cb = button_callback;
+		pmsg->process_cb = cbFunction;
 		status = xQueueSend(hqueue, (void*)&pmsg, 0);
 
 		if(pdPASS == status) {
