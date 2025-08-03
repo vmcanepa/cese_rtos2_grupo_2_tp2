@@ -113,9 +113,10 @@ bool task_ao_init(void) {
 		if(pdPASS != status)
 			return false;				// salgo de ao_ui_init
 		ao_running = true;
+		LOGGER_INFO("[AO] Crea tarea AO");
 	}
 	ao_ui_init();
-	LOGGER_INFO("[AO] Crea tarea AO");
+
 	return true;
 }
 

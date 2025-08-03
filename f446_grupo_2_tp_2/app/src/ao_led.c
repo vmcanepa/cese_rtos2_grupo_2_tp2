@@ -60,15 +60,17 @@ void ao_led_process(ao_led_handle_t * hao) {
 bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 
 	hao->color = color;
-	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
+	if(NULL == hao->hqueue){ // solo se crea si no hay una creada
+		hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
 
-	if(NULL == hao->hqueue) {
+		if(NULL == hao->hqueue) {
 
-		LOGGER_INFO("[LED] Error! Falla creación de cola. Abortando init de LED %d", hao->color);
-		return false;		// salgo de ao_led_init
+			LOGGER_INFO("[LED] Error! Falla creación de cola. Abortando init de LED %d", hao->color);
+			return false;		// salgo de ao_led_init
+		}
+		vQueueAddToRegistry(hao->hqueue, colorNames[hao->color]);
+		LOGGER_INFO("[LED] Crea cola led %d", hao->color);
 	}
-	vQueueAddToRegistry(hao->hqueue, colorNames[hao->color]);
-	LOGGER_INFO("[LED] Crea cola led %d", hao->color);
 	return true;
 }
 

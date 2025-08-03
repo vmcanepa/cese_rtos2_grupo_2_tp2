@@ -43,7 +43,7 @@ void ao_ui_process(void) {
 
 	msg_t* pmsg;
 
-	while(pdPASS == xQueueReceive(hqueue, (void*) &pmsg, 1000)) {
+	if(pdPASS == xQueueReceive(hqueue, (void*) &pmsg, 0)) {
 
 		bool msgSent = pdFAIL;
 
@@ -96,16 +96,18 @@ void ao_ui_process(void) {
 }
 
 bool ao_ui_init(void) {
-
-	hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
-
+	// agrego logica para que se cree la cola solo si no hay una creada
 	if(NULL == hqueue) {
+		hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
 
-		LOGGER_INFO("[UI] Error! Falla creación de cola. Abortando init de UI.");
-		return false;
+		if(NULL == hqueue) {
+
+			LOGGER_INFO("[UI] Error! Falla creación de cola. Abortando init de UI.");
+			return false;
+		}
+		vQueueAddToRegistry(hqueue, "Cola UI");
+		LOGGER_INFO("[UI] Crea cola UI");
 	}
-	vQueueAddToRegistry(hqueue, "Cola UI");
-	LOGGER_INFO("[UI] Crea cola UI");
 	return true;
 }
 
@@ -163,14 +165,14 @@ void ui_running_update(void) {
 	UBaseType_t msgInQueues = 0;
 	msgInQueues += uxQueueMessagesWaiting(hqueue);						// cola UI
 
-	if(led_red.hqueue)
+	if(NULL != led_red.hqueue)
 		msgInQueues += uxQueueMessagesWaiting(led_red.hqueue);			// cola RED
 
-	if(led_green.hqueue)
-			msgInQueues += uxQueueMessagesWaiting(led_green.hqueue);	// cola GREEN
+	if(NULL != led_green.hqueue)
+		msgInQueues += uxQueueMessagesWaiting(led_green.hqueue);	// cola GREEN
 
-	if(led_blue.hqueue)
-			msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue);		// cola BLUE
+	if(NULL != led_blue.hqueue)
+		msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue);		// cola BLUE
 
 	if(!msgInQueues) ao_running = false;
 }
