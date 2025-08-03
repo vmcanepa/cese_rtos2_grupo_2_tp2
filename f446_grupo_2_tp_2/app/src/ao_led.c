@@ -2,9 +2,10 @@
  * ao_led.c
  *
  *  Created on: Aug 2, 2025
- *      Author: mariano
+ *      Author: grupo 2 RTOS II
  */
 
+/********************** inclusions *******************************************/
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -24,18 +25,24 @@
 /********************** internal data definition *****************************/
 static GPIO_TypeDef* led_port_[] = {LED_RED_PORT, LED_GREEN_PORT,  LED_BLUE_PORT};
 static uint16_t led_pin_[] = {LED_RED_PIN,  LED_GREEN_PIN, LED_BLUE_PIN };
-static const char *colorNames[] = {
-    "RED",
-    "GREEN",
-    "BLUE"
-};
-/********************** internal data definition *****************************/
-
+static const char *colorNames[] = {"RED", "GREEN", "BLUE"};
 
 /********************** internal functions declaration ***********************/
 static void turnOnLed(ao_led_handle_t* hao);
 static void turnOffLed(ao_led_handle_t* hao);
 
+/********************** internal functions definition ************************/
+static void turnOnLed(ao_led_handle_t* hao) {
+
+	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
+}
+
+static void turnOffLed(ao_led_handle_t* hao) {
+
+	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
+}
+
+/********************** external functions declaration ***********************/
 void ao_led_process(ao_led_handle_t * hao) {
 
 	ao_led_message_t* pmsg;
@@ -46,17 +53,14 @@ void ao_led_process(ao_led_handle_t * hao) {
 			turnOnLed(hao);
 		else
 			turnOffLed(hao);
-	    //vPortFree(pmsg); // chequear el punto que dice que la mem del mensaje
-	    // la tiene que liberar quien creo el mensaje, no el que lo recibe
 		pmsg->process_cb(pmsg); // corre collback de UI que libera la mem
 	}
-//	ao_led_delete_cola(hao);
 }
 
 bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 
-	if(!hao->color)
-		hao->color = color;
+//	if(!hao->color) // color toma valor 0 para AO_LED_COLOR_RED
+	hao->color = color;
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
 
 	if(NULL == hao->hqueue) {
@@ -90,38 +94,31 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFun
 			LOGGER_INFO("[LED] memoria liberada");
 		}
 	} else {
+
         LOGGER_INFO("[LED] Memoria insuficiente");
     }
 	return (status == pdPASS);
 }
 
-static void turnOnLed(ao_led_handle_t* hao) {
-
-	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_ON);
-}
-
-static void turnOffLed(ao_led_handle_t* hao) {
-
-	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
-}
-
-
 void ao_led_delete_cola(ao_led_handle_t* hao) {
-	// el logging no puede quedar adentro de las secciones criticas
-	if (hao->hqueue != NULL) {
-		LOGGER_INFO("[LED] Cola eliminada para LED %d", hao->color);
 
-		taskENTER_CRITICAL(); // seccion critica para que nadie inserte mensajes mientras vacio la cola
+	// el logging no puede quedar adentro de las secciones criticas
+	if(NULL != hao->hqueue) {
+
+		LOGGER_INFO("[LED] Cola eliminada para LED %d", hao->color);
+		taskENTER_CRITICAL(); {				// seccion critica para que nadie inserte mensajes mientras vacio la cola
 
 			ao_led_message_t* pmsg;
 
-			while(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, 0)){
+			while(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, 0)) {
+
 				vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
 			}
 			vQueueDelete(hao->hqueue);
 			hao->hqueue = NULL;
-		taskEXIT_CRITICAL();
+		}taskEXIT_CRITICAL();
 	}
-
 //	vTaskDelete(NULL);
 }
+
+/********************** end of file ******************************************/

@@ -2,8 +2,10 @@
  * ao_ui.c
  *
  *  Created on: Aug 2, 2025
- *      Author: mariano
+ *      Author: grupo 2 RTOS II
  */
+
+/********************** inclusions *******************************************/
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -26,7 +28,6 @@ typedef enum {
 	UI_STATE_RED,
 	UI_STATE_GREEN,
 	UI_STATE_BLUE,
-	UI_STATE__N,
 } ui_state_t;
 
 /********************** external data declaration *****************************/
@@ -34,10 +35,9 @@ extern ao_led_handle_t led_red, led_green, led_blue;
 extern bool ao_running;
 /********************** internal data definition *****************************/
 static QueueHandle_t hqueue;
-static ui_state_t estado_ui = UI_STATE__N;
+static ui_state_t estado_ui = UI_STATE_STANDBY;
 
-/********************** internal functions declaration ***********************/
-
+/********************** external functions declaration ***********************/
 void ao_ui_process(void) {
 
 	msg_t* pmsg;
@@ -89,29 +89,29 @@ void ao_ui_process(void) {
 				break;
 		}
 		// Aviso al callback del remitente (button)
-		if (pmsg->process_cb) {
+		if (pmsg->process_cb)
 			pmsg->process_cb(pmsg);
-		}
 	}
 }
 
 bool ao_ui_init(void) {
 
 	hqueue = xQueueCreate(QUEUE_LENGTH_, QUEUE_ITEM_SIZE_);
+
 	if(NULL == hqueue) {
+
 		LOGGER_INFO("[UI] Error! Falla creación de cola. Abortando init de UI.");
 		return false; // salgo de ao_ui_init
 	}
 	vQueueAddToRegistry(hqueue, "Cola UI");
-	if(estado_ui == UI_STATE__N) estado_ui = UI_STATE_STANDBY;
-
 	LOGGER_INFO("[UI] Crea cola UI");
 	return true;
 }
 
 bool ao_ui_send_event(msg_event_t event, ui_callback_t cbFunction) {
 
-	if(NULL == hqueue){
+	if(NULL == hqueue) {
+
 		LOGGER_INFO("[UI] Error! Cola UI no exite.");
 		return false;
 	}
@@ -126,6 +126,7 @@ bool ao_ui_send_event(msg_event_t event, ui_callback_t cbFunction) {
 	BaseType_t result = xQueueSend(hqueue, &pmsg, 0);
 
 	if(pdPASS != result) {
+
 		LOGGER_INFO("[UI] Error! Cola UI llena, liberando mem del msg.");
 		vPortFree(pmsg);
 		return false;
@@ -134,15 +135,19 @@ bool ao_ui_send_event(msg_event_t event, ui_callback_t cbFunction) {
 }
 
 void ao_ui_callback(ao_led_message_t* pmsg) {
+
     vPortFree((void*)pmsg);
     LOGGER_INFO("[UI] Callback: memoria de mensaje LED liberada");
 }
 
-void ao_ui_queue_delete(void){
-	if (hqueue != NULL) {
+void ao_ui_queue_delete(void) {
+
+	if(NULL != hqueue) {
+
 		msg_t* pmsg;
 
-		while(pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 0)){
+		while(pdPASS == xQueueReceive(hqueue, (void*)&pmsg, 0)) {
+
 			vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
 		}
 		vQueueDelete(hqueue);
@@ -150,18 +155,23 @@ void ao_ui_queue_delete(void){
 	}
 }
 
-void ui_running_update(void){
+void ui_running_update(void) {
+
 	// chequear si hay mensajes para procesar en alguna cola
 	// uxQueueMessagesWaiting: Devuelve la cantidad de mensajes actualmente en la cola.
 	UBaseType_t msgInQueues = 0;
 	msgInQueues += uxQueueMessagesWaiting(hqueue); // cola UI
+
 	if(led_red.hqueue)
 		msgInQueues += uxQueueMessagesWaiting(led_red.hqueue); // cola RED
+
 	if(led_green.hqueue)
 			msgInQueues += uxQueueMessagesWaiting(led_green.hqueue); // cola GREEN
+
 	if(led_blue.hqueue)
 			msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue); // cola BLUE
 
 	if(!msgInQueues) ao_running = false;
-
 }
+
+/********************** end of file ******************************************/

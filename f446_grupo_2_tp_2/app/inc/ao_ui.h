@@ -2,7 +2,7 @@
  * ao_ui.h
  *
  *  Created on: Aug 2, 2025
- *      Author: mariano
+ *      Author: grupo 2 RTOS II
  */
 
 #ifndef INC_AO_UI_H_

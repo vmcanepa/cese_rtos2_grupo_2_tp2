@@ -2,7 +2,7 @@
  * ao_led.h
  *
  *  Created on: Aug 2, 2025
- *      Author: mariano
+ *      Author: grupo 2 RTOS II
  */
 
 #ifndef INC_AO_LED_H_
@@ -44,7 +44,6 @@ struct ao_led_message_s {
 	ao_led_action_t action;
 	led_callback_t process_cb;
 };
-
 
 /********************** external data declaration ****************************/
 

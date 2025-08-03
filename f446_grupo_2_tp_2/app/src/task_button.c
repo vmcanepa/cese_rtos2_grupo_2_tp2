@@ -109,7 +109,6 @@ void task_button(void* argument) {
 
 		GPIO_PinState button_state;
 		button_state = !HAL_GPIO_ReadPin(BTN_PORT, BTN_PIN);
-
 		button_type_t button_type;
 		button_type = button_process_state_(button_state);
 
