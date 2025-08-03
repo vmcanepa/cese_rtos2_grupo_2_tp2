@@ -44,7 +44,6 @@
 #include "dwt.h"
 
 #include "task_led.h"
-#include "task_ui.h"
 
 /********************** macros and definitions *******************************/
 #define QUEUE_LED_LENGTH_		(1)
@@ -59,7 +58,8 @@ static void task_led(void *argument);
 static void ao_led_delete(ao_led_handle_t* hao);
 static void turnOnLed(ao_led_handle_t* hao);
 static void turnOffLed(ao_led_handle_t* hao);
-static void ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) ;
+static bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) ;
+static void ao_led_queue_delete(ao_led_handle_t* hao);
 
 /********************** internal functions definition ************************/
 static void task_led(void *argument) {
@@ -83,14 +83,24 @@ static void task_led(void *argument) {
 }
 
 static void ao_led_delete(ao_led_handle_t* hao) {
+	LOGGER_INFO("[LED] Elimina tarea led %d y su cola", hao->color);
+	
+	taskENTER_CRITICAL(); // seccion critica para que nadie inserte mensajes mientras vacio la cola
+		ao_led_queue_delete(hao);
+	taskEXIT_CRITICAL();
+	vTaskDelete(NULL);
+}
 
+static void ao_led_queue_delete(ao_led_handle_t* hao){
 	if (hao->hqueue != NULL) {
+		ao_led_message_t* pmsg;
 
+		while(pdPASS == xQueueReceive(hao->hqueue, (void*)&pmsg, 0)){
+			vPortFree((void*)pmsg); // libero la memoria de posibles mensajes encolados
+		}
 		vQueueDelete(hao->hqueue);
 		hao->hqueue = NULL;
 	}
-	LOGGER_INFO("[LED] Elimina tarea led %d", hao->color);
-	vTaskDelete(NULL);
 }
 
 static void turnOnLed(ao_led_handle_t* hao) {
@@ -103,24 +113,36 @@ static void turnOffLed(ao_led_handle_t* hao) {
 	HAL_GPIO_WritePin(led_port_[hao->color], led_pin_[hao->color], LED_OFF);
 }
 
-static void ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
+static bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 
 	if (!hao->color) hao->color = color;
 
 	hao->hqueue = xQueueCreate(QUEUE_LED_LENGTH_, QUEUE_LED_ITEM_SIZE_);
-	while(NULL == hao->hqueue) {/*error*/}
+	while(NULL == hao->hqueue) {
+		LOGGER_INFO("[LED] Error! Falla creación de cola. Abortando init de LED %d", hao->color);
+		return false; // salgo de ao_led_init
+	}
 
-	LOGGER_INFO("[LED] Crea tarea led %d", hao->color);
 	BaseType_t status;
 	status = xTaskCreate(task_led, "task_ao_led", 128, (void*)hao, tskIDLE_PRIORITY, NULL);
+	if(pdPASS != status) {
+		LOGGER_INFO("[UI] Error! Falla creación de tarea. Abortando init de LED %d", hao->color);
+		taskENTER_CRITICAL(); // seccion critica para que nadie mande mensajes mientras elimino
+			ao_led_queue_delete(hao);
+		taskEXIT_CRITICAL();
+		return false; // salgo de ao_led_init
+	}
 
-	while(pdPASS != status) {/*error*/}
+	LOGGER_INFO("[LED] Crea tarea led %d", hao->color);
+	return true;
 }
 
 /********************** external functions definition ************************/
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFunction) {
 
-	ao_led_init(hao, hao->color); // inicializa y despues manda el msg
+	if(!ao_led_init(hao, hao->color)){ // inicializa y despues manda el msg
+		return pdFAIL;
+	}
 
 	BaseType_t status =  pdFAIL;
 	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
@@ -128,7 +150,7 @@ bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 	if(NULL != pmsg) {
 
 		pmsg->action = msg;
-		pmsg->process_cb = ao_ui_callback;
+		pmsg->process_cb = cbFunction;
 		status = xQueueSend(hao->hqueue, (void*)&pmsg, 0);
 
 		if(pdPASS == status) {
