@@ -43,6 +43,6 @@ typedef struct {
 /********************** external functions declaration ***********************/
 void ao_led_process(void);
 bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color);
-bool ao_led_send_event(ao_led_handle_t* hao, ao_led_action_t msg);
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg);
 
 #endif /* INC_AO_LED_H_ */

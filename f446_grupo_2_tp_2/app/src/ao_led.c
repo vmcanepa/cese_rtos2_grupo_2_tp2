@@ -64,7 +64,7 @@ bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 	return true;
 }
 
-bool ao_led_send_event(ao_led_handle_t* hao, ao_led_action_t msg) {
+bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg) {
 
 	BaseType_t status =  pdFAIL;
 	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
