@@ -77,6 +77,12 @@ bool ao_led_init(ao_led_handle_t* hao, ao_led_color_t color) {
 bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFunction) {
 
 	BaseType_t status =  pdFAIL;
+
+	if(NULL == hao->hqueue){ // si el init de led falló la cola no existe
+		LOGGER_INFO("[LED] Error. Cola de led %d no existe", hao->color);
+		return status;
+	}
+
 	ao_led_message_t* pmsg = (ao_led_message_t*)pvPortMalloc(sizeof(ao_led_message_t));
 
 	if(NULL != pmsg) {

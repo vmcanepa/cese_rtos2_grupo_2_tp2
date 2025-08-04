@@ -119,19 +119,22 @@ void task_button(void* argument) {
 			case BUTTON_TYPE_NONE:
 				break;
 			case BUTTON_TYPE_PULSE:
-				task_ao_init();
-				LOGGER_INFO("[BUTTON] pulso enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_PULSE, button_callback);
+				if(task_ao_init()){
+					if(ao_ui_send_event(MSG_EVENT_BUTTON_PULSE, button_callback))
+						LOGGER_INFO("[BUTTON] pulso enviado");
+				}
 				break;
 			case BUTTON_TYPE_SHORT:
-				task_ao_init();
-				LOGGER_INFO("[BUTTON] corto enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_SHORT, button_callback);
+				if(task_ao_init()){
+					if(ao_ui_send_event(MSG_EVENT_BUTTON_SHORT, button_callback))
+						LOGGER_INFO("[BUTTON] corto enviado");
+				}
 				break;
 			case BUTTON_TYPE_LONG:
-				task_ao_init();
-				LOGGER_INFO("[BUTTON] largo enviado");
-				ao_ui_send_event(MSG_EVENT_BUTTON_LONG, button_callback);
+				if(task_ao_init()){
+					if(ao_ui_send_event(MSG_EVENT_BUTTON_LONG, button_callback))
+						LOGGER_INFO("[BUTTON] largo enviado");
+				}
 				break;
 			default:
 				LOGGER_INFO("[BTN] error");

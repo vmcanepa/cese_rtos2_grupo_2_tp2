@@ -110,14 +110,15 @@ bool task_ao_init(void) {
 		BaseType_t status;
 		status = xTaskCreate(task_ao, "task_ao", 128, NULL, tskIDLE_PRIORITY + 1, NULL);
 
-		if(pdPASS != status)
+		if(pdPASS != status){
+			LOGGER_INFO("[UI] Error! Falla creación de tarea. Abortando init de AO.");
 			return false;				// salgo de ao_ui_init
+		}
 		ao_running = true;
 		LOGGER_INFO("[AO] Crea tarea AO");
 	}
-	ao_ui_init();
 
-	return true;
+	return ao_ui_init();
 }
 
 /********************** end of file ******************************************/
