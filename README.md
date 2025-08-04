@@ -17,6 +17,7 @@ Desarrollar un programa en RTOS que resuelva el problema planteado en el [enunci
  ## 4. Archivos soporte:
 [link al video](https://drive.google.com/file/d/16AN7Kxq_vrFi6v8B7Ltyof4vZbFJSvZj/view?usp=sharing)
 
+[link al video version segunda entrega](https://drive.google.com/file/d/17ND20xl6OT2Pd_CftyXAzKOlhsYzGrrX/view?usp=sharing)
 ---
 
 ## 4. Breve guía para trabajo colaborativo (organización del repositorio git)
