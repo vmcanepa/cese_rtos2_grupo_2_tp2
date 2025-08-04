@@ -43,112 +43,82 @@
 #include "logger.h"
 #include "dwt.h"
 
-#include "task_button.h"
 #include "task_ao.h"
+#include "ao_ui.h"
+#include "ao_led.h"
 
 /********************** macros and definitions *******************************/
 #define TASK_PERIOD_MS_           (50)
-#define BUTTON_PULSE_TIMEOUT_     (200)
-#define BUTTON_SHORT_TIMEOUT_     (1000)
-#define BUTTON_LONG_TIMEOUT_      (2000)
+#define NLEDS 3
 
-/********************** internal data declaration ****************************/
-typedef enum {
-
-	BUTTON_TYPE_NONE,
-	BUTTON_TYPE_PULSE,
-	BUTTON_TYPE_SHORT,
-	BUTTON_TYPE_LONG,
-	BUTTON_TYPE__N,
-} button_type_t;
+/********************** external data definition *****************************/
+bool ao_running = false;
+ao_led_handle_t led_red, led_green, led_blue;
 
 /********************** internal data definition *****************************/
-static struct {
+static ao_led_handle_t * haos[NLEDS];
 
-	button_type_t estado;
-    uint32_t counter;
-} button;
 /********************** internal functions declaration ***********************/
-static void button_init_(void);
-static button_type_t button_process_state_(bool value);
+static void task_ao(void* argument);
+static void task_ao_delete(void);
 
 /********************** internal functions definition ************************/
-static void button_init_(void) {
+static void task_ao(void* argument) {
 
-	button.counter = 0;
+	ao_led_init(&led_red, AO_LED_COLOR_RED);
+	ao_led_init(&led_green, AO_LED_COLOR_GREEN);
+	ao_led_init(&led_blue, AO_LED_COLOR_BLUE);
+    haos[0] = &led_red;
+    haos[1] = &led_green;
+    haos[2] = &led_blue;
+
+	while(ao_running) {
+
+		ao_ui_process();
+
+		for(uint8_t i = 0; i < NLEDS; i++) {
+
+			ao_led_process(haos[i]);
+		}
+		ui_running_update();
+		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+	}
+	task_ao_delete();
 }
 
-static button_type_t button_process_state_(bool value) {
+static void task_ao_delete(void) {
 
-	button_type_t ret = BUTTON_TYPE_NONE;
+	LOGGER_INFO("[AO] Elimino tarea AO y cola UI"); // se elimina en cualquier estado
+	taskENTER_CRITICAL(); {		// seccion critica para que nadie mande mensajes mientras elimino
 
-	if(value) {
+		ao_ui_queue_delete();
 
-		button.counter += TASK_PERIOD_MS_;
-	} else {
+		for(uint8_t i = 0; i < NLEDS; i++) {
 
-		if(BUTTON_LONG_TIMEOUT_ <= button.counter) {
-
-			ret = BUTTON_TYPE_LONG;
-		} else if(BUTTON_SHORT_TIMEOUT_ <= button.counter) {
-
-			ret = BUTTON_TYPE_SHORT;
-		} else if(BUTTON_PULSE_TIMEOUT_ <= button.counter) {
-
-			ret = BUTTON_TYPE_PULSE;
+			ao_led_delete_cola(haos[i]);
 		}
-		button.counter = 0;
-	}
-	return ret;
+	} taskEXIT_CRITICAL();
+	vTaskDelete(NULL);
 }
 
 /********************** external functions definition ************************/
-void task_button(void* argument) {
+bool task_ao_init(void) {
 
-	button_init_();
+	// agrego logica para que se cree la tarea solo si no hay una corriendo
+	if(!ao_running) {
 
-	while(true) {
+		BaseType_t status;
+		status = xTaskCreate(task_ao, "task_ao", 128, NULL, tskIDLE_PRIORITY + 1, NULL);
 
-		GPIO_PinState button_state;
-		button_state = !HAL_GPIO_ReadPin(BTN_PORT, BTN_PIN);
-		button_type_t button_type;
-		button_type = button_process_state_(button_state);
-
-		switch(button_type) {
-
-			case BUTTON_TYPE_NONE:
-				break;
-			case BUTTON_TYPE_PULSE:
-				if(task_ao_init()){
-					if(ao_ui_send_event(MSG_EVENT_BUTTON_PULSE, button_callback))
-						LOGGER_INFO("[BUTTON] pulso enviado");
-				}
-				break;
-			case BUTTON_TYPE_SHORT:
-				if(task_ao_init()){
-					if(ao_ui_send_event(MSG_EVENT_BUTTON_SHORT, button_callback))
-						LOGGER_INFO("[BUTTON] corto enviado");
-				}
-				break;
-			case BUTTON_TYPE_LONG:
-				if(task_ao_init()){
-					if(ao_ui_send_event(MSG_EVENT_BUTTON_LONG, button_callback))
-						LOGGER_INFO("[BUTTON] largo enviado");
-				}
-				break;
-			default:
-				LOGGER_INFO("[BTN] error");
-				break;
+		if(pdPASS != status){
+			LOGGER_INFO("[UI] Error! Falla creación de tarea. Abortando init de AO.");
+			return false;				// salgo de ao_ui_init
 		}
-		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
+		ao_running = true;
+		LOGGER_INFO("[AO] Crea tarea AO");
 	}
-}
 
-void button_callback(msg_t* pmsg) {
-
-	// cuando la UI termina de procesar, liberar la mem del msg
-	vPortFree((void*)pmsg);
-	LOGGER_INFO("[BTN] Callback: memoria liberada");
+	return ao_ui_init();
 }
 
 /********************** end of file ******************************************/
