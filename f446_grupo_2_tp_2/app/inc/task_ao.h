@@ -32,8 +32,8 @@
  * @author : Sebastian Bedin <sebabedin@gmail.com>
  */
 
-#ifndef TASK_LED_H_
-#define TASK_LED_H_
+#ifndef TASK_UI_H_
+#define TASK_UI_H_
 
 /********************** CPP guard ********************************************/
 #ifdef __cplusplus
@@ -45,45 +45,18 @@ extern "C" {
 /********************** macros ***********************************************/
 
 /********************** typedef **********************************************/
-typedef enum {
 
-  AO_LED_MESSAGE_ON,
-  AO_LED_MESSAGE_OFF,
-  AO_LED_MESSAGE__N,
-} ao_led_action_t;
-
-typedef enum {
-
-  AO_LED_COLOR_RED,
-  AO_LED_COLOR_GREEN,
-  AO_LED_COLOR_BLUE,
-} ao_led_color_t;
-
-typedef struct {
-
-    ao_led_color_t color;
-    QueueHandle_t hqueue;
-} ao_led_handle_t;
-
-typedef struct ao_led_message_s ao_led_message_t;
-
-typedef void (*led_callback_t)(ao_led_message_t* pmsg); // cuando led termina, avisa a UI
-
-struct ao_led_message_s {
-
-	ao_led_action_t action;
-	led_callback_t process_cb;
-};
 /********************** external data declaration ****************************/
 
 /********************** external functions declaration ***********************/
 
-bool ao_led_send(ao_led_handle_t* hao, ao_led_action_t msg, led_callback_t cbFunction);
+bool task_ao_init(void);
+
 /********************** End of CPP guard *************************************/
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* TASK_LED_H_ */
+#endif /* TASK_UI_H_ */
 /********************** end of file ******************************************/
 
