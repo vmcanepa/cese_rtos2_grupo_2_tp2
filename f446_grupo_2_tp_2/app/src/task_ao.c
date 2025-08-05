@@ -52,7 +52,7 @@
 #define NLEDS 3
 
 /********************** external data definition *****************************/
-bool ao_running = false;
+volatile bool ao_running = false;
 ao_led_handle_t led_red, led_green, led_blue;
 
 /********************** internal data definition *****************************/
@@ -80,10 +80,13 @@ static void task_ao(void* argument) {
 
 			ao_led_process(haos[i]);
 		}
-		ui_running_update();
+
+		if(!ui_running_update()) {
+
+			task_ao_delete();
+		}
 		vTaskDelay((TickType_t)(TASK_PERIOD_MS_ / portTICK_PERIOD_MS));
 	}
-	task_ao_delete();
 }
 
 static void task_ao_delete(void) {

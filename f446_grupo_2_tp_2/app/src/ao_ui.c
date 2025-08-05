@@ -32,7 +32,7 @@ typedef enum {
 
 /********************** external data declaration *****************************/
 extern ao_led_handle_t led_red, led_green, led_blue;
-extern bool ao_running;
+extern volatile bool ao_running;
 
 /********************** internal data definition *****************************/
 static QueueHandle_t hqueue;
@@ -158,15 +158,15 @@ void ao_ui_queue_delete(void) {
 	}
 }
 
-void ui_running_update(void) {
+bool ui_running_update(void) {
 
 	// chequear si hay mensajes para procesar en alguna cola
 	// uxQueueMessagesWaiting: Devuelve la cantidad de mensajes actualmente en la cola.
 	UBaseType_t msgInQueues = 0;
-	msgInQueues += uxQueueMessagesWaiting(hqueue);						// cola UI
+	msgInQueues += uxQueueMessagesWaiting(hqueue);					// cola UI
 
 	if(NULL != led_red.hqueue)
-		msgInQueues += uxQueueMessagesWaiting(led_red.hqueue);			// cola RED
+		msgInQueues += uxQueueMessagesWaiting(led_red.hqueue);		// cola RED
 
 	if(NULL != led_green.hqueue)
 		msgInQueues += uxQueueMessagesWaiting(led_green.hqueue);	// cola GREEN
@@ -175,6 +175,7 @@ void ui_running_update(void) {
 		msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue);		// cola BLUE
 
 	if(!msgInQueues) ao_running = false;
+	return ao_running;
 }
 
 /********************** end of file ******************************************/

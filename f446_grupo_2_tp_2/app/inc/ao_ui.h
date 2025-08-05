@@ -40,6 +40,6 @@ bool ao_ui_send_event(msg_event_t event, ui_callback_t cbFunction);
 void ao_ui_process(void);
 void ao_ui_callback(ao_led_message_t * pmsg);
 void ao_ui_queue_delete(void);
-void ui_running_update(void);
+bool ui_running_update(void);
 
 #endif /* INC_AO_UI_H_ */
