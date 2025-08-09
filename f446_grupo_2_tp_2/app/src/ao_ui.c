@@ -162,19 +162,21 @@ bool ui_running_update(void) {
 
 	// chequear si hay mensajes para procesar en alguna cola
 	// uxQueueMessagesWaiting: Devuelve la cantidad de mensajes actualmente en la cola.
-	UBaseType_t msgInQueues = 0;
-	msgInQueues += uxQueueMessagesWaiting(hqueue);					// cola UI
+	taskENTER_CRITICAL(); {
+		UBaseType_t msgInQueues = 0;
+		msgInQueues += uxQueueMessagesWaiting(hqueue);					// cola UI
 
-	if(NULL != led_red.hqueue)
-		msgInQueues += uxQueueMessagesWaiting(led_red.hqueue);		// cola RED
+		if(NULL != led_red.hqueue)
+			msgInQueues += uxQueueMessagesWaiting(led_red.hqueue);		// cola RED
 
-	if(NULL != led_green.hqueue)
-		msgInQueues += uxQueueMessagesWaiting(led_green.hqueue);	// cola GREEN
+		if(NULL != led_green.hqueue)
+			msgInQueues += uxQueueMessagesWaiting(led_green.hqueue);	// cola GREEN
 
-	if(NULL != led_blue.hqueue)
-		msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue);		// cola BLUE
+		if(NULL != led_blue.hqueue)
+			msgInQueues += uxQueueMessagesWaiting(led_blue.hqueue);		// cola BLUE
 
-	if(!msgInQueues) ao_running = false;
+		if(!msgInQueues) ao_running = false;
+	} taskEXIT_CRITICAL();
 	return ao_running;
 }
 
